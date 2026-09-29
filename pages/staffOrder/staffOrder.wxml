@@ -1,0 +1,77 @@
+<!--pages/staffOrder/staffOrder.wxml-->
+<view class="order_detail_page">
+  <view class="order_info_status">
+    <view class="order_status" wx:if="{{orderInfo.order_status==-2}}">已取消</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==-1}}">未支付</view>
+    <view class="unpay_des" wx:if="{{orderInfo.order_status==-1}}">订单将于5分钟后自动取消</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==0}}">已支付</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==1}}">租车中</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==2}}">退款中</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==3}}">已退款</view>
+    <view class="order_status" wx:if="{{orderInfo.order_status==4}}">已完成</view>
+  </view>
+  <view class="order_info">
+    <view class="order_car_info">
+      <view class="order_car_info_image"><image src="{{orderInfo.item_pic_url}}" mode="widthFix"/></view>
+      <view class="order_car_info_name">{{orderInfo.item_name}}</view>
+    </view>
+    <hr class="line-style"/>
+    <view class="order_address_time">
+      <view>取车地址:{{orderInfo.pickup_address}}</view>
+      <view>还车地址:{{orderInfo.return_address}}</view>
+      <view>取车时间:{{orderInfo.rent_time_start}}</view>
+      <view>还车时间:{{orderInfo.rent_time_end}}</view>
+    </view>
+  </view>
+  <view class="order_sn_info">
+    <view class="order_sn_num" bind:tap="copyText" data-key="{{orderInfo.order_sn}}">订单号：{{orderInfo.order_sn}}</view>
+    <view class="order_book_time">下单时间：{{orderInfo.createtime}}</view>
+  </view>
+  <!-- 租赁人信息 -->
+  <view class="order_driver_info">
+    <view class="order_driver_name" bind:tap="copyText" data-key="{{orderInfo.driver_name}}">租赁人：{{orderInfo.driver_name}}</view>
+    <view class="order_driver_idcard" bind:tap="copyText" data-key="{{orderInfo.driver_idcard}}">身份证号：{{orderInfo.driver_idcard}}</view>
+    <view class="order_driver_phone" bind:tap="copyText" data-key="{{orderInfo.driver_phone}}" >联系电话：{{orderInfo.driver_phone}}</view>
+  </view>
+  <view class="order_cost_info">
+    <view class="title">费用明细</view>
+    <hr class="line-style"/>
+    <view class="cost1">
+      <view class="cost_name">租车费用</view>
+      <view class="cost_price">¥{{orderInfo.rent_total_price}}</view>
+    </view>
+    <view class="cost2">
+      <view class="cost_name">服务费用</view>
+      <view class="cost_price">¥{{orderInfo.server_total_price}}</view>
+    </view>
+    <view class="cost3">
+      <view class="cost_name">清洁费用</view>
+      <view class="cost_price">¥{{orderInfo.clean_price}}</view>
+    </view>
+    <view class="cost3">
+      <view class="cost_name">司机费用</view>
+      <view class="cost_price">¥{{orderInfo.driver_price}}</view>
+    </view>
+    <view class="cost3">
+      <view class="cost_name">上门送车费用</view>
+      <view class="cost_price">¥{{orderInfo.door_pickup_price}}</view>
+    </view>
+    <view class="cost3">
+      <view class="cost_name">上门取车费用</view>
+      <view class="cost_price">¥{{orderInfo.door_return_price}}</view>
+    </view>
+    <view class="cost3">
+      <view class="cost_name">优惠金额</view>
+      <view class="cost_price">-¥{{orderInfo.pms_price}}</view>
+    </view>
+    <hr class="line-style"/>
+    <view class="cost_all">
+      <view class="cost_name">总费用</view>
+      <view class="cost_price">¥{{orderInfo.total_cost}}</view>
+    </view>
+  </view>
+  <view class="operation">
+    <view class="op_pay" wx:if="{{orderInfo.order_status==0}}" ><button data-nextstatus="1" bind:tap="clickOrderDoing">确认出车</button></view>
+    <view class="op_pay" wx:if="{{orderInfo.order_status==1}}" ><button data-nextstatus="4" bind:tap="clickOrderDoing">已完成</button></view>
+  </view>
+</view>

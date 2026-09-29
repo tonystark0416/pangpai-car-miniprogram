@@ -1,0 +1,132 @@
+<!--pages/checkOut/checkOut.wxml-->
+<view class="checkOutPage">
+  <!-- 结算信息 -->
+  <view class="checkout-info">
+    <view class="car-info">
+      <view class="car-name-tag">
+        <view class="car-name">{{checkoutInfo.data.car_name}}</view>
+        <view class="car-tag">{{checkoutInfo.data.des}}</view>
+      </view>
+      <view class="car-pic">
+        <image src="{{checkoutInfo.data.image_url}}" mode="widthFix" />
+      </view>
+    </view>
+    <view class="checkout-time-address">
+      <view class="quche-time">取车时间：{{pickUpTime}}</view>
+      <view class="quche-address">
+        <text>商家免费送车上门：</text><text class="address_info">{{pickUpAddress}}</text>
+      </view>
+      <view class="huanche-time">还车时间：{{returnTime}}</view>
+      <view class="huanche-address">
+        <text>商家免费取车上门：</text><text class="address_info">{{returnAddress}}</text>
+      </view>
+    </view>
+  </view>
+  <!-- 保险信息 -->
+  <view class="insurance_info">
+    <view class="insurance_info_title">租车保障</view>
+    <view class="insurance_info_content">
+      <view class="insurance_info_list">
+        <radio-group bindchange="">
+          <radio value="" checked="true" disabled="true" />基础保障（已选）
+        </radio-group>
+        <view class="ins_cost">每日¥{{insuranceInfo.insurancePrice_l1}}</view>
+        <view class="ins_rule">车损1500内自付</view>
+        <view class="ins_rule">三者保额 50万</view>
+      </view>
+      <view class="insurance_info_list">
+        <radio-group bindchange="upgradeInsurance">
+          <radio value="needUpgrade" checked="{{insuranceInfo.radio_upgrade}}" bindtap='checkedTap' />升级优享（可选）
+        </radio-group>
+        <view class="ins_cost">每日¥{{insuranceInfo.insurancePrice_l2}}</view>
+        <view class="ins_rule">车损全额免赔</view>
+        <view class="ins_rule">三者保额 100万</view>
+      </view>
+    </view>
+  </view>
+  <!-- 用户身份信息 -->
+  <view class="user-info">
+    <view class="title">身份证信息</view>
+    <view class="driver-info">
+      <view>
+        <view class="driver-idcard">
+          <text hidden="{{idcard_text}}">请上传身份证正面</text>
+          <text hidden="{{idcard_result}}">{{driver_info.driver_idcard_name}} | {{driver_info.driver_idcard_number}}</text>
+        </view>
+      </view>
+      <view class="idcard_botton" bind:tap="uploadPic">上传身份证</view>
+    </view>
+  </view>
+  <!-- 订单联系人 -->
+  <view class="driver-phone">
+    <text>联系电话：</text>
+    <input bindblur="handleBlur" placeholder="请输入电话号码" type="number" value="{{contact_phone}}" />
+  </view>
+  <!-- 司机信息 -->
+  <view class="siji_info">
+    <radio-group bindchange="">
+      <radio value="" bind:tap="sijiTap" checked="{{siji_info.siji_server}}" />司机服务 <text class="siji_text">庞派司机服务，每天{{siji_info.siji_price}}元，8小时服务</text>
+    </radio-group>
+  </view>
+  <!-- 所需费用计算 -->
+  <view class="cost-info">
+    <view class="title">费用明细</view>
+    <view class="sub-title">
+      <view class="sub-title-name">车辆租金</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.rent_total_price}}</view>
+    </view>
+    <view class="sub-content">租金每天¥{{checkoutInfo.rent_day_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+    <view class="sub-title">
+      <view class="sub-title-name">车辆整备费用</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.clean_price}}</view>
+    </view>
+    <view class="sub-content">用于车辆清洁，车辆保养</view>
+    <view class="sub-title">
+      <view class="sub-title-name">基础服务费</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.server_total_price}}</view>
+    </view>
+    <view class="sub-content">包含基础保障，三者保险等费用</view>
+    <view class="sub-content">保险费每天¥{{checkoutInfo.server_day_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+    <!-- 上门取送费部分 -->
+    <view class="sub-title" wx:if="{{siji_server==false}}">
+      <view class="sub-title-name">上门送车费</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.door_pickup_price}}</view>
+    </view>
+    <!-- 上门取送费部分 -->
+    <view class="sub-title" wx:if="{{siji_server==false}}">
+      <view class="sub-title-name">上门收车费</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.door_return_price}}</view>
+    </view>
+    <!-- 司机部分 -->
+    <view class="sub-title" wx:if="{{siji_server==true}}">
+      <view class="sub-title-name">司机人工费</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.driver_total_price}}</view>
+    </view>
+    <view class="sub-content" wx:if="{{siji_server==true}}">人工费每天¥{{checkoutInfo.driver_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+  </view>
+  <!-- 优惠明细 -->
+  <!-- <view class="pms_info">
+    <view class="title">优惠信息</view>
+    <view class="pms_info_list">
+      <view class="pms_info_list_item">
+        <view class="sub-title-name">{{checkoutInfo.pms_reason}}</view>
+        <view class="sub-title-cost">- ¥{{checkoutInfo.pms_price}}</view>
+      </view>
+    </view>
+  </view> -->
+  <!-- 提交订单按钮 -->
+  <view class="contract">
+    <checkbox-group bindchange="checkboxChange">
+      <checkbox value="yes" />我已阅读并同意
+    </checkbox-group>
+    <view class="contract_link" bind:tap="goContract">《庞派汽车租赁合同》</view>
+  </view>
+  <view class="order-submit">
+    <view class="order-all-cost">
+      <text class="cost-title">在线支付</text><text class="cost-price">¥{{checkoutInfo.total_price}}</text>
+    </view>
+    <view class="order-button" bind:tap="goPay">
+      <text>去支付</text>
+    </view>
+  </view>
+</view>

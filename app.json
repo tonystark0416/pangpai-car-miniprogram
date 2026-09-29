@@ -1,0 +1,52 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/checkOut/checkOut",
+    "pages/orderList/orderList",
+    "pages/orderDetail/orderDetail",
+    "pages/login/login",
+    "pages/contract/contract",
+    "pages/staff/staff",
+    "pages/staffOrder/staffOrder"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTextStyle": "white",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#969696",
+    "selectedColor": "#FFFFFF",
+    "borderStyle": "black",
+    "backgroundColor": "#000000",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "/img/index_sel.png",
+        "selectedIconPath": "/img/index_seled.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/orderList/orderList",
+        "iconPath": "/img/order_sel.png",
+        "selectedIconPath": "/img/order_seled.png",
+        "text": "订单"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "获取你当前位置信息用于小程序位置接口的效果展示"
+    },
+    "scope.userFuzzyLocation": {
+      "desc": "获取你当前位置信息用于提供更好的租车服务"
+    }
+  },
+  "requiredPrivateInfos": [
+    "choosePoi",
+    "chooseLocation",
+    "getFuzzyLocation"
+  ],
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

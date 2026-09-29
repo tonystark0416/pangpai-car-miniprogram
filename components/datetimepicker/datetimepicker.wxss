@@ -1,0 +1,22 @@
+.zujian{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.zujian .b_txt{
+  margin-bottom: 20rpx;
+}
+.zujian picker{
+  /* width: 60%; */
+  height: 100rpx;
+  width: 80%;
+}
+.selected_time{
+  height: 80rpx;
+  width: 100%;
+  background-color: #000000;
+  color: white;
+  border-radius: 30rpx;
+  text-align: center;
+  line-height: 80rpx;
+}

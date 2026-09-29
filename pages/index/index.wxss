@@ -1,0 +1,204 @@
+/**index.wxss**/
+/* banner区域 */
+.banner{
+  width: 100%;
+  background-color: grey;
+  color: white;
+  display: flex;
+  align-items: center;
+}
+.banner image{
+  width: 100%;
+}
+/* 时间地址选择区域 */
+.time_locate_zone{
+  background-color: white;
+  border-radius: 25rpx;
+  margin: 20rpx;
+  box-shadow:0 0 2px gray
+}
+
+.timeInfo{
+  width: 100%;
+  height: 250rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.timeInfo datetimepicker{
+  width: 45%;
+}
+
+/* 地址选择 */
+.locateSel{
+  width: 100%;
+  height: 250rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content:space-around;
+  align-items: flex-start;
+ 
+}
+.pickUpAddress,.returnAddress{
+  /* width: 100%; */
+  /* overflow : hidden; */
+  /* margin-left: 50rpx; */
+  padding-left: 50rpx;
+  padding-right: 50rpx;
+  /* font-size: 32rpx; */
+}
+
+.pickUpAddress .b_text,.returnAddress .b_text{
+  text-decoration:underline;
+  margin-left: 20rpx;
+  font-size: 28rpx;
+  color: #000000;
+}
+.server_text{
+  font-size: 25rpx;
+  color: gray;
+  margin-left: 70rpx; 
+}
+
+
+/* 时间选择 */
+.picker_group {
+  height: 30%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24rpx;
+  color: #000000;
+  /* border-bottom: 1rpx solid #efefef; */
+
+}
+
+.picker_group picker {
+  background-color: #000000;
+  color:white;
+  /* height: 80%; */
+  line-height: 90rpx;
+  margin: 0 2%;
+  padding: 0 2%;
+  /* border: 1rpx solid #64bff1; */
+  border-radius: 30rpx;
+}
+
+
+
+.b_search{
+  margin-top: 3%;
+  text-align: center;
+  height: 25%;
+  width: 50%;
+  line-height: 70rpx;
+  background-color: #000000;
+  color:white;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
+.b_search text{
+  width: 100%;
+}
+
+/* .car_list{
+  margin-top: 50rpx;
+} */
+
+/* 选项卡样式 */
+.tab-title {
+  width: 96%;
+  height: 88rpx;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 20rpx;
+  border-radius: 20rpx;
+  margin: auto
+}
+ 
+.title-sel {
+  color: #24272c;
+  font-size: 26rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+ 
+.title-sel  .line-style{
+  background: #fff;
+  height: 6rpx;
+  width: 40rpx;
+  position: relative;
+  margin-top: 10rpx;
+}
+ 
+.title-sel-selected{
+  font-weight:500;
+  color: #000000;
+  font-size: 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.title-sel-selected .line-style{
+  background: #000000;
+  height: 6rpx;
+  width: 90rpx;
+  position: relative;
+  margin-top: 10rpx;
+}
+
+/* 汽车列表 */
+.con_list{
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.con_list .list{
+  background-color: white;
+  border-radius: 20rpx;
+  width: 47%;  /*width:50%;每行显示两列，width:33.3%;每行显示三列*/
+  height: 500rpx;
+  text-align: center;
+  margin-bottom: 20rpx;
+  margin-left: 2%;
+}
+.img_list image{
+  /* width: 350rpx; */
+  width: 100%;
+}
+.txt_list,.txt_tag{
+  font-size: 30rpx;
+  color: #6C6C6C;
+  height: 60rpx;
+  overflow: hidden;
+  text-align: center;
+}
+.price_info{
+  margin-top: 10rpx;
+  /* display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-left: 20rpx;
+  padding-right: 20rpx; */
+}
+.txt_price{
+  /* padding-left: 20rpx; */
+  font-size: 26rpx;
+  color: #000000;
+  text-decoration:line-through
+}
+.txt_Bonus{
+  /* padding-right: 10rpx; */
+  font-size: 30rpx;
+  /* padding-top: 10rpx; */
+  color: #B22222;
+  font-weight: bold;
+}

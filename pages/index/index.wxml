@@ -1,0 +1,69 @@
+<!-- 首页 -->
+<!-- 引入wxs文件，用于过滤 -->
+<wxs module="filters" src="../../utils/filter.wxs"></wxs>
+<!-- 广告图 -->
+<view class="banner">
+  <image src="/img/index.jpeg" mode="widthFix"/>
+</view>
+<!-- 选择时间和地理位置 -->
+<view class="time_locate_zone">
+  <!-- 日期组件 -->
+  <view class="timeInfo">
+    <datetimepicker id="begin" bind:bindMultiPickerChange="bindMultiPickerChange" bind:bindCancel="bindCancel" b_txt="{{begin_time_txt}}" time = "{{quche_sourceTime}}" data-type="pickup">
+    </datetimepicker>
+    <datetimepicker id="end" bind:bindMultiPickerChange="bindMultiPickerChange" bind:bindCancel="bindCancel" b_txt="{{end_time_txt}}" time = "{{huanche_sourceTime}}" data-type="return">
+    </datetimepicker>
+  </view>
+  <!-- 地址选择器 -->
+  <view class = "locateSel">
+    <view class="pickUpAddress" bindtap="getUserPoi" data-type="pickup">
+        <text>送车上门地址:</text>
+        <text class="b_text">{{pickup_address}} </text>
+    </view>
+    <view class="returnAddress" bindtap="getUserPoi" data-type="return">
+        <text>上门收车地址:</text>
+        <text class="b_text">{{return_address}}</text>
+    </view>
+    <view class="server_text">
+      为了你的租乘体验，庞派租车默认送车上门和上门收车
+    </view>
+  </view>
+</view>
+
+<!-- 首页推荐列表 -->
+<view class="car_list">
+  <!-- 选项卡tab -->
+  <!-- <view class='tab-title'>
+      <view class="{{0 == currentIndex ? 'title-sel-selected' : 'title-sel'}}" bindtap='titleClick' data-idx='0' data-subject='' data-type="hot">
+        <text>庞派自营</text>
+        <hr class="line-style"/>
+      </view>
+      <view class="{{1 == currentIndex ? 'title-sel-selected' : 'title-sel'}}" bindtap='titleClick' data-idx='1' data-subject='1' data-type="subject">
+        <text>星选商家</text>
+        <hr class="line-style"/>
+      </view>
+      <view class="{{2 == currentIndex ? 'title-sel-selected' : 'title-sel'}}" bindtap='titleClick' data-idx='2' data-subject='2' data-type="subject">
+        <text>热销榜</text>
+        <hr class="line-style"/>
+      </view>
+      <view class="{{3 == currentIndex ? 'title-sel-selected' : 'title-sel'}}" bindtap='titleClick' data-idx='3' data-subject='3' data-type="subject">
+        <text>低价榜</text>
+        <hr class="line-style"/>
+      </view>
+  </view> -->
+
+  <!-- 流式布局 -->
+  <view class="con_list">
+    <view class="list" wx:for="{{recCarList}}" wx:key='list' wx:for-item="item" bindtap="clickItem" data-car_id="{{item.id}}">
+      <view class="img_list">
+        <image src="{{item.image_url}}" mode="widthFix"></image>
+      </view>
+        <view class="txt_list">{{item.car_name}}</view>
+        <view class="txt_tag">{{item.des}}</view>
+        <view class="price_info">
+          <view class="txt_price">单价¥ {{filters.toFix(item.day_price)}}/天</view>
+          <view class="txt_Bonus">优惠价¥ {{filters.toFix(item.promotion_day_price)}}/天</view>
+        </view>
+    </view>
+  </view>
+</view>

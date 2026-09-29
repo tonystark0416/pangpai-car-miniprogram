@@ -1,0 +1,17 @@
+<!--pages/login/login.wxml-->
+<view class = "page">
+  <view class="banner">
+    <image src="/img/WechatIMG3004.jpeg" mode="widthFix"/>
+  </view>
+  <view class = "loginForm">
+    <view class="b_login">
+      <button type="primary" plain="true" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">手机号一键登陆</button>
+    </view>
+    <view class="agreement">
+      <!-- <radio-group bindchange="radioChange"> -->
+        <radio  bindchange="radioChange" /> 
+        <!-- <text>我已阅读并同意</text><text class="agreement">《庞派租车会员注册协议》</text>  -->
+      <!-- </radio-group> -->
+    </view>
+  </view>
+</view>

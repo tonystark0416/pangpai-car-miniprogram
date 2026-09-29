@@ -1,0 +1,42 @@
+<!--pages/staff/staff.wxml-->
+<!-- 搜索功能 -->
+<view>
+  <view class="top">
+    <view class="search">
+      <view class="search_in">
+        <!-- 使用代码请更改图片路径 -->
+        <image src="/img/staff_search.png"></image>
+        <input type="text" placeholder="请输入租车人手机号搜索" bindinput="handleInputChange"/>
+        <view class="search_btn" bind:tap="searchOrderByPhone">搜索</view>
+      </view>
+    </view>
+  </view>
+</view>
+<!-- 订单列表 -->
+<view class="order_list_page">
+  <view class="order_list_item" wx:for="{{orderList}}" wx:key="index" wx:for-index="indexs" wx:for-item="items" bindtap='goOrderDetail' data-ordersn='{{items.order_sn}}'>
+    <view class="order_info_1">
+      <view class="order_book_time">预定于 {{items.createtime}}</view>
+        <view class="order_status" wx:if="{{items.order_status==-2}}">已取消</view>
+        <view class="order_status" wx:if="{{items.order_status==-1}}">未支付</view>
+        <view class="order_status" wx:if="{{items.order_status==0}}">已支付</view>
+        <view class="order_status" wx:if="{{items.order_status==1}}">租车中</view>
+        <view class="order_status" wx:if="{{items.order_status==2}}">退款中</view>
+        <view class="order_status" wx:if="{{items.order_status==3}}">已退款</view>
+        <view class="order_status" wx:if="{{items.order_status==4}}">已完成</view>
+    </view>
+    <hr class="line-style"/>
+    <view class="order_info_2">
+      <view class="order_time_address">
+        <view>取车时间 {{items.rent_time_start}}</view>
+        <view>取车地址 {{items.pickup_address}}</view>
+        <view>还车时间 {{items.rent_time_end}}</view>
+        <view>还车地址 {{items.return_address}}</view>
+      </view>
+      <view class="order_car_info">
+        <view class="car_info">车型 {{items.item_name}}</view>
+        <view class="order_cost">¥{{items.total_cost}}</view>
+      </view>
+    </view>
+  </view>
+</view>

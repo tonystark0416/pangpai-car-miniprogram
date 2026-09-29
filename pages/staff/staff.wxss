@@ -1,0 +1,103 @@
+/* pages/staff/staff.wxss */
+
+page{
+  background-color: black;
+}
+/* 顶部搜索样式 */
+.search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90rpx;
+  background-color: black;
+}
+.search .search_in {
+  display: flex;
+  align-items: center;
+  justify-content:space-between;
+  padding:0 20rpx ;
+  box-sizing: border-box;
+  height: 70rpx;
+  width: 710rpx;
+  background-color: #ffffff;
+  border-radius: 25rpx;
+}
+.search_in image {
+  height: 45rpx;
+  width: 45rpx;
+}
+.search input {
+  width: 480rpx;
+}
+.search_in .search_btn {
+  height: 55rpx;
+  width: 110rpx;
+  border-radius: 55rpx;
+  background-color:black;
+  color: #ffffff;
+  text-align: center;
+  line-height: 55rpx;
+  cursor: pointer;
+}
+
+
+
+
+/* 订单列表样式 */
+.order_list_page{
+  height: 100vh;
+  width: 100%;
+}
+
+.order_list_item{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: 20rpx;
+  border-radius: 20rpx;
+  background-color: white;
+  height: 400rpx;
+}
+
+.order_info_1{
+  padding-top: 20rpx;
+  padding-left: 25rpx;
+  padding-right: 25rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.order_info_1 .order_book_time,.order_status{
+  font-size: 32rpx;
+  color: gray;
+}
+
+
+
+.order_list_item .line-style{
+  background:gray;
+  height: 3rpx;
+  width: 90%;
+  /* position: relative; */
+  margin-top: 5%;
+  align-self: center;
+}
+
+.order_info_2{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.order_time_address{
+  padding-left: 25rpx;
+}
+.order_car_info{
+  padding-left: 25rpx;
+  padding-right: 25rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
