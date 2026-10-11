@@ -1,22 +1,26 @@
-.zujian{
+/* datetimepicker.wxss —— iOS 风格（组件样式隔离，使用固定色值） */
+.zujian {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.zujian .b_txt{
-  margin-bottom: 20rpx;
+.zujian .b_txt {
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #8E8E93;
 }
-.zujian picker{
-  /* width: 60%; */
+.zujian picker {
   height: 100rpx;
-  width: 80%;
+  width: 88%;
 }
-.selected_time{
-  height: 80rpx;
+.selected_time {
+  height: 84rpx;
   width: 100%;
-  background-color: #000000;
-  color: white;
-  border-radius: 30rpx;
+  background-color: #F2F2F7;
+  color: #1C1C1E;
+  border-radius: 16rpx;
   text-align: center;
-  line-height: 80rpx;
+  line-height: 84rpx;
+  font-size: 28rpx;
+  font-weight: 600;
 }

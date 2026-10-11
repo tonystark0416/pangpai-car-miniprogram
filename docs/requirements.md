@@ -6,7 +6,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 文档创建时间 | 2026-09-10 |
-| 当前代码基线 | v0.2（2026-09-10：下线并删除 AI 对话页） |
+| 当前代码基线 | v1.0（2026-10-11：员工端下线、统一请求层重构） |
 | 项目类型 | 微信小程序（原生，无框架/npm 依赖）+ 多端壳配置（iOS/Android mini-app） |
 | 后端 | PHP 服务（域名 https://pangpai-car.com，部分接口走 car/route.php、car/staff/api.php 网关式入口） |
 | 归属 | 庞派出行 · 租车业务 |
@@ -27,7 +27,7 @@
 | --- | --- | --- |
 | 游客（未授权手机号） | 无 openid/uid 授权记录 | 可浏览首页与车列表；结算前需注册手机号 |
 | 注册用户 | 后端 userRegister 返回 id，存 globalData.userid 与 storage `uid` | 可下单、支付、查看/取消/退款订单 |
-| 员工 | 原设计由后端 checkIsStaff 判定 | ⚠️ 前端校验代码已被注释，员工页无鉴权守卫（见 B-08） |
+| ~~员工~~ | ~~原设计由后端 checkIsStaff 判定~~ | v1.0 员工端已整体下线（pages/staff、pages/staffOrder 删除），员工操作迁移至独立业务后台 |
 
 ### 1.3 当前业务范围
 - 支持城市：广州市 / 深圳市 / 佛山市（首页 `canCity` 硬编码）。
@@ -39,7 +39,7 @@
 
 ## 二、页面清单与功能状态
 
-全局页面注册于 `app.json`（8 个），tabBar 仅含 首页/订单 两项。
+全局页面注册于 `app.json`（6 个），tabBar 仅含 首页/订单 两项。
 
 | # | 页面路由 | 页面名称 | 功能定位 | 实现状态 |
 | --- | --- | --- | --- | --- |
@@ -49,10 +49,8 @@
 | 4 | pages/orderDetail/orderDetail | 订单详情（用户） | 状态展示、费用明细、未支付可继续支付/取消、已支付可申请退款/联系客服 | 基本完成 |
 | 5 | pages/login/login | 手机号登录 | 协议勾选 + 手机号一键登录（getPhoneNumber 动态令牌 → userRegister） | 完成，协议文案被注释 |
 | 6 | pages/contract/contract | 租赁合同 | web-view 加载后端 H5 合同 | 壳页面 |
-| 7 | pages/staff/staff | 员工订单查询 | 手机号搜索 + 分页订单列表（staff 网关接口） | 基本完成，⚠️ 无权限守卫、加载重复等 |
-| 8 | pages/staffOrder/staffOrder | 员工订单详情 | 客户信息复制、确认出车、完成订单 | 基本完成 |
 
-> 已下线页面：`pages/ai/ai`（AI 对话，v0.2 删除，详见变更记录）。
+> 已下线页面：`pages/ai/ai`（AI 对话，v0.2 删除）；`pages/staff`、`pages/staffOrder`（员工端，v1.0 整体删除，业务迁移至独立后台）。
 
 ---
 
@@ -80,7 +78,7 @@ App.onLaunch
 ```
 ⚠️ 时间/地点等关键参数通过 `app.globalData` 跨页传递（无缓存/无兜底），直进结算页或小程序被杀后重进会丢失，见 B-02。
 
-### 3.3 员工履约链路
+### 3.3 员工履约链路（v1.0 已下线，迁移至独立业务后台）
 ```
 staff（查询列表）→ staffOrder（详情）
   → 状态 0 已支付 →「确认出车」→ 状态 1 租车中
@@ -89,15 +87,15 @@ staff（查询列表）→ staffOrder（详情）
 
 ### 3.4 订单状态机（前后端字段 order_status 约定，多页面重复展示）
 
-| 值 | 语义 | 用户端可用操作 | 员工端可用操作 |
-| --- | --- | --- | --- |
-| -2 | 已取消 | - | - |
-| -1 | 未支付（5 分钟后自动取消提示） | 继续支付 / 取消订单 | - |
-| 0 | 已支付 | 申请退款 / 联系客服 | 确认出车 |
-| 1 | 租车中 | - | 标记已完成 |
-| 2 | 退款中 | - | - |
-| 3 | 已退款 | - | - |
-| 4 | 已完成 | - | - |
+| 值 | 语义 | 用户端可用操作 |
+| --- | --- | --- |
+| -2 | 已取消 | - |
+| -1 | 未支付（5 分钟后自动取消提示） | 继续支付 / 取消订单（二次确认） |
+| 0 | 已支付 | 申请退款（二次确认）/ 联系客服 |
+| 1 | 租车中 | - |
+| 2 | 退款中 | - |
+| 3 | 已退款 | - |
+| 4 | 已完成 | - |
 
 ---
 
@@ -141,11 +139,10 @@ staff（查询列表）→ staffOrder（详情）
 | `/getOrderDetail` | 用户订单详情 | orderDetail.js |
 | `car/route.php?service=cancelOrder` | 取消订单 | orderDetail.js |
 | `car/route.php?service=userRefundOrder` | 申请退款 | orderDetail.js |
-| `car/staff/api.php?service=queryOrderListByStaff` (POST) | 员工订单列表/搜索 | staff.js |
-| `car/staff/api.php?service=updateOrder` (POST) | 员工变更订单状态 | staffOrder.js |
-| `car/route.php?service=getOrderDetail` | 员工端订单详情 | staffOrder.js |
 
 > 已注释下线：`getMsgTemplate`（订阅消息模板）、`checkIsStaff`（员工校验）、`upload.php`（旧上传入口）。
+> v1.0 随员工端整体下线：`queryOrderListByStaff`、`updateOrder`、员工端 `getOrderDetail`。
+> v1.0 起全部请求经 `utils/request.js` 统一请求层发起（R-02）。
 
 ---
 
@@ -170,9 +167,10 @@ staff（查询列表）→ staffOrder（详情）
 
 - 原生小程序：无框架、无 npm 依赖（`package.json` 为 `{}`）。
 - `components/`：仅 `datetimepicker`（5 列日期时间选择器）。
-- `utils/`：`http.js`（封装基本未用）、`util.js`、`date.js`、`filter.wxs`、`locate.js`（腾讯位置服务逆地址解析，key 硬编码）、`subscribe.js`（订阅消息，基本弃用）、`upload.js`（旧上传，未被引用）、`wxPay.js`（支付）、`qqmap-wx-jssdk1.2/`（腾讯地图 SDK）。
+- `utils/`：`config.js`（BASE_URL 唯一域名入口）、`request.js`（v1.0 统一请求层：Promise 化 wx.request/wx.uploadFile）、`util.js`、`filter.wxs`、`locate.js`（腾讯位置服务逆地址解析，key 硬编码）、`wxPay.js`（支付）、`qqmap-wx-jssdk1.2/`（腾讯地图 SDK）。
+- v1.0 已删除死文件：`http.js`（被 request.js 取代）、`upload.js`（与 checkOut 内实现重复）、`subscribe.js`（订阅消息弃用）、`date.js`（无引用）。
 - 多端相关：`app.miniapp.json`、`project.miniapp.json`、`miniapp/android|ios`、`i18n/base.json`、`project.private.config.json`、`miniprogram_npm/fastestsmallesttextencoderdecoder`（未使用）、`.cloudbase/`（历史云开发残留）。
-- 无 README、无 .gitignore（工程可见目录下未见）、无 docs（本文档为新增）。
+- 无 README（工程可见目录下未见）；~~无 .gitignore~~（建仓时已补充，v0.10 核对更正）；docs 已有（本文档）。
 
 ---
 
@@ -188,19 +186,19 @@ staff（查询列表）→ staffOrder（详情）
 | B-02 | 取还车时间/地址仅存 globalData，无 storage 兜底；直接进入结算页/小程序被杀后数据丢失 | 用户关键操作数据丢失 | 转 storage 或路由参数持久化，缺失时引导回首页 |
 | B-03 | 首页 `getNow('huanche')` 用 `nowDay+3` 字符串拼日期再 `new Date()` 解析，跨月/月末（如 3/30 +3 天）产出非法日期，iOS 解析更严格易得 NaN | 默认还车时间可能为 NaN | 用 `new Date(timestamp+3天)` 时间戳运算 |
 | B-04 | datetimepicker：初始日列固定 31 天，未滚列直接确定到小月会得到非法日期；未限制"还车 > 取车"、未禁选过去时间 | 订单时间错误、可下"过去时间"单 | 组件内按年月联动初始列、加时间范围校验 |
-| B-05 | checkOut 保险/司机切换在 if/else 后无条件再 `this.checkOut()`，true 分支会连发两次计价请求 | 重复请求/竞态 | 重构为统一变更后仅触发一次 |
+| B-05 | ~~checkOut 保险/司机切换在 if/else 后无条件再 `this.checkOut()`，true 分支会连发两次计价请求~~（v1.0 已修复，切换仅触发一次计价） | ~~重复请求/竞态~~ | ~~重构为统一变更后仅触发一次~~ |
 | B-06 | 保险"升级优享"使用 radio + `bindtap`（且外层 radio-group bindchange 为空）；合同 checkbox 与文字未用 label 关联 | 交互不规范、易误触、可点区域小 | 用 checkbox/radio 标准事件与 label 包裹 |
-| B-07 | 取消订单/申请退款无二次确认（wx.showModal）即直接请求 | 用户误操作不可逆 | 加确认弹窗，成功后刷新状态 |
-| B-08 | 员工端无权限守卫：`checkIsStaff` 被注释，任何登录用户可直接进入 staff/staffOrder，且能改订单状态、看客户身份证手机号 | 严重越权/隐私风险 | 必须后端鉴权 + 前端守卫，并做数据脱敏 |
-| B-09 | orderList：`isStaff` 恒 false（入口注释）、`noOrder` 逻辑语义颠倒（有单时置 true）；未登录直接访问该 tab 提示"请先登录"但无跳转处理 | 展示逻辑混乱 | 重构列表状态：loading/空/列表/未登录 |
-| B-10 | staff 页 `getOrderListByStaff` 在 success 中同步 `this.data.page++` 并直接改 data 未用 setData（部分场景） | 页数与渲染不同步 | 数据变更统一 setData |
+| B-07 | ~~取消订单/申请退款无二次确认（wx.showModal）即直接请求~~（v1.0 已加确认弹窗） | ~~用户误操作不可逆~~ | ~~加确认弹窗，成功后刷新状态~~ |
+| B-08 | ~~员工端无权限守卫~~（v1.0 员工端（staff/staffOrder 两页）整体下线删除，员工操作迁移至独立业务后台，小程序内不再存在越权面） | - | - |
+| B-09 | orderList：~~`isStaff` 恒 false（入口注释）~~（v1.0 已随员工端删除）；`noOrder` 逻辑语义颠倒（有单时置 true）；未登录直接访问该 tab 提示"请先登录"但无跳转处理 | 展示逻辑混乱 | 重构列表状态：loading/空/列表/未登录 |
+| B-10 | ~~staff 页 `getOrderListByStaff` 在 success 中同步 `this.data.page++` 并直接改 data 未用 setData（部分场景）~~（v1.0 已随员工端删除） | - | - |
 | B-11 | 支付金额由前端 `total_price*100` 上送 /getWxPay；若服务端不校验存在篡改风险 | 资损风险（依赖后端） | 服务端以订单为准重新计价，前端仅展示 |
 | B-12 | checkOut `goPay` 无防重复提交；`createOrder` 成功后立即调支付，双击可能重复创建订单 | 重复下单 | 加提交锁、按钮 loading |
 | B-13 | ~~AI 页残留 localhost 地址、他项目文案，无页面入口~~（v0.2 已整体下线删除该页，关闭） | - | - |
-| B-14 | 首页 onLoad 直接读 `option.scene` 并 `decodeURIComponent`，非扫码场景下无 scene（另 `globalData.source` 未在 app.js 声明即赋值） | 潜在异常与约定混乱 | 判空 + app.js 补充声明 |
+| B-14 | 首页 onLoad 直接读 `option.scene` 并 `decodeURIComponent`，非扫码场景下无 scene（~~`globalData.source` 未在 app.js 声明即赋值~~ v1.0 已补声明） | 潜在异常与约定混乱 | scene 判空仍待处理 |
 | B-15 | 时间默认"取车=now"、"还车=now+3 天"且不支持选择当天以外的精确时间等边界由组件决定；暂未发现后端时间戳校验 | 口径不一致风险 | 统一前后端时间精度（秒）与校验 |
-| B-16 | 全局无统一 loading/错误处理；http.js 封装在页面中基本未使用（页面散落 30+ 处裸 wx.request） | 交互/错误不一致、无法统一埋点 | 见 R-02 |
-| B-17 | login 页协议：radio 与文案分离、无《协议》链接跳转；agreement 判断恒真逻辑可疑（radioChange 恒设 true） | 协议同意无效化 | 用 checkbox/协议弹窗规范处理 |
+| B-16 | ~~全局无统一 loading/错误处理；http.js 封装在页面中基本未使用（页面散落 30+ 处裸 wx.request）~~（v1.0 统一请求层 `utils/request.js` 落地并全量替换，见 R-02） | - | - |
+| B-17 | ~~login 页协议：radio 与文案分离、无《协议》链接跳转；agreement 判断恒真逻辑可疑（radioChange 恒设 true）~~（v1.1 已修复：改为 checkbox-group 真实开关 agreementChange，恢复协议文案显示） | ~~协议同意无效化~~ | ~~用 checkbox/协议弹窗规范处理~~ |
 | B-18 | staff/staffOrder/orderDetail 等页面 json 缺 navigationBarTitleText（部分显示默认路径标题） | 体验不一致 | 补全页面标题 |
 | B-19 | `app.json requiredPrivateInfos` 声明了 `choosePoi` 但代码未使用；使用 `getFuzzyLocation` + `chooseLocation`，隐私描述 `scope.userLocation` 与 fuzzy 场景需对齐 | 审核/合规风险 | 核对真实使用项并同步隐私声明 |
 
@@ -208,14 +206,14 @@ staff（查询列表）→ staffOrder（详情）
 | 编号 | 问题 | 建议 |
 | --- | --- | --- |
 | R-01 | ~~API 域名硬编码 40+ 处~~（v0.7 已收敛至 `utils/config.js` BASE_URL）；三种接口风格混用仍待治理 | ~~建 `config/api.js` 域名/超时/环境配置~~（已完成域名部分）；网关类接口统一封装映射 |
-| R-02 | `utils/http.js` 未被采用；页面散落裸 wx.request 且无统一鉴权/错误/埋点 | 以 Promise 重构 request 层（成功态、错误态、loading、token）并替换页面 |
-| R-03 | 订单状态文案/颜色在 orderDetail、orderList、staff、staffOrder 四页重复 | 抽公共 `order-status` 组件 或 wxs 映射 |
-| R-04 | 大量注释遗留代码（首页 tab、优惠模块、checkIsStaff、订阅模板、司机校验等） | 清理前用 git 留档，一次性删除死代码 |
-| R-05 | checkOut 身份证上传逻辑与 utils/upload.js 重复（后者已废弃） | 保留一处封装，删除另一份 |
+| R-02 | ~~`utils/http.js` 未被采用；页面散落裸 wx.request 且无统一鉴权/错误/埋点~~（v1.0 已落地 `utils/request.js` 统一请求层：Promise 化、统一 BASE_URL 拼接、可选 loading、网络失败统一提示并 reject；全部页面/工具已替换完成） | - | - |
+| R-03 | 订单状态文案/颜色在 orderDetail、orderList 两页重复（v1.0 员工端两页删除后范围缩小） | 抽公共 `order-status` 组件 或 wxs 映射 |
+| R-04 | ~~大量注释遗留代码（首页 tab、优惠模块、checkIsStaff、订阅模板、司机校验等）~~（v1.0 已清理：删除 http/upload/subscribe/date 死文件及各页注释死代码） | - | - |
+| R-05 | ~~checkOut 身份证上传逻辑与 utils/upload.js 重复（后者已废弃）~~（v1.0 已删除 utils/upload.js，上传统一走 request.js 的 uploadFile） | - | - |
 | R-06 | 目录/命名：`filter.wxs.toFix` 注释"保留两位"实为取整；页面/组件注释与文件名不符等 | 统一命名与注释 |
-| R-07 | 冗余空生命周期模板（login/contract 等大量空 onXxx + 注释） | 精简 |
-| R-08 | `app.wxss` 仅注释、无全局样式基线；颜色主题（全黑导航/tabBar）无 token | 建设计变量/公共样式（考虑是否引入主题） |
-| R-09 | 工程杂项：空 `package.json`/`package-lock`/空 `node_modules`、未使用 `miniprogram_npm`、`.cloudbase/` 历史残留、无 `.gitignore`/README | 清理、补充仓库规范与文档 |
+| R-07 | 冗余空生命周期模板（~~login/orderList/orderDetail~~ v1.0 重写时已精简；contract/checkOut/index 仍有） | 精简 |
+| R-08 | ~~`app.wxss` 仅注释、无全局样式基线；颜色主题（全黑导航/tabBar）无 token~~（v1.1 已落地 iOS 风格设计变量体系 `--pp-*` 与全局卡片/按钮基线，全量改版为浅色苹果风格） | - | - |
+| R-09 | 工程杂项：空 `package.json`/`package-lock`/空 `node_modules`、未使用 `miniprogram_npm`、`.cloudbase/` 历史残留、~~无 `.gitignore`~~（已补）、无 README（~~死文件清理~~ v1.0 已完成：http/upload/subscribe/date/staff_search.png） | 清理、补充仓库规范与文档 |
 | R-10 | 多端（miniapp ios/android、i18n）与微信小程序主链路边界不清 | 明确维护主工程为微信小程序，或梳理多端构建链路 |
 | R-11 | 时间格式化函数散落 util.js / date.js / index.js / 组件内 | 收敛为单一时间工具 |
 | R-12 | 腾讯位置服务 key 硬编码于 utils/locate.js | 收敛配置并按 key 权限最小化 |
@@ -224,19 +222,19 @@ staff（查询列表）→ staffOrder（详情）
 | 编号 | 问题 | 建议 |
 | --- | --- | --- |
 | N-01 | 车辆列表无上拉加载、无骨架屏/加载态、无价格排序筛选；首页大 Banner + widthFix 图片体验粗糙 | 分页加载、加载占位、筛选排序、规范图片比例 |
-| N-02 | 员工搜索：点击"搜索"后无 loading 与空态提示；输入即发起/需手动点搜索不一致 | 明确交互 + 状态反馈 |
+| N-02 | ~~员工搜索：点击"搜索"后无 loading 与空态提示；输入即发起/需手动点搜索不一致~~（v1.0 已随员工端删除） | - | - |
 | N-03 | 订单详情费用项用户端/员工端展示字段不一致（清洁费、优惠等） | 统一模板或明确各自口径 |
 | N-04 | ~~AI 页头像等素材曾存 assets 目录，与 img 分工不清~~（v0.2 随 AI 页下线、assets 目录一并删除，关闭） | img 统一承载页面图片资源 |
 | N-05 | 多处 toast 无 icon:'none' 时长默认，长文案可能截断 | 统一 toast/modal 规范 |
 
 ---
 
-## 九、后续迭代优先级建议（Roadmap 草稿）
+## 九、后续迭代优先级建议（Roadmap 草稿，v1.0 更新）
 
-1. **P0（安全/合规，先行）**：B-08 员工权限守卫；B-19 隐私声明对齐；B-11 金额防篡改确认。
-2. **P1（核心链路稳定）**：B-01~B-05、B-12（登录时序、时间边界、结算防重、globalData 兜底）。
-3. **P2（工程质量）**：R-01/R-02 统一请求层与 API 配置 → 顺带清理 R-03~R-07。
-4. **P3（体验迭代）**：N-01~N-05、首页改版、订阅消息/客服能力等，按产品规划推进。
+1. **P0（安全/合规，先行）**：~~B-08 员工权限守卫~~（v1.0 员工端下线已消除）；B-19 隐私声明对齐（公众平台后台操作）；B-11 金额防篡改确认（需后端）。
+2. **P1（核心链路稳定）**：B-01/B-02/B-03/B-04、~~B-05/B-12~~（v1.0 已修）——登录时序 Promise 化收尾、下单参数 storage 兜底、时间边界。
+3. **P2（工程质量）**：R-03 订单状态组件（两页范围）；R-06/R-07/R-08 命名注释/空模板/样式基线；R-09 工程杂项清理（空 package.json、miniapp 多端壳）。
+4. **P3（体验迭代）**：N-01/N-03/N-05、首页改版、订阅消息/客服能力等，按产品规划推进。
 
 ---
 
@@ -246,6 +244,8 @@ staff（查询列表）→ staffOrder（详情）
 
 | 日期 | 版本 | 类型 | 模块 | 说明 | 关联条目 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-11 | v1.1 | UI 重构 | 全局样式与交互 | iOS（苹果）风格全量改版：1) app.wxss 建立设计变量体系（--pp-bg/#F2F2F7、--pp-blue/#007AFF、--pp-text/#1C1C1E 等系统色）与卡片/胶囊按钮基线（R-08 关闭）；2) app.json 导航栏与 tabBar 由全黑改浅色，tabBar 四张图标经 PIL 重新着色（未选中 iOS 灰/选中 iOS 蓝）；3) 六处页面/组件样式全部重写为浅色卡片风格：index（banner 圆角卡片、地址行分隔线、车卡片）、login（蓝色一键登录胶囊按钮、协议文案恢复并改真实勾选，B-17 关闭）、orderList/orderDetail（订单状态 iOS 语义色：蓝/绿/橙/灰、费用卡片、胶囊操作按钮）、checkOut（蓝色主按钮与支付胶囊、checkbox/radio 蓝色选中态）、datetimepicker（浅色填充选择器）；4) 顺带清理 index.wxss 死样式（tab-title/picker_group/b_search 等）；5) 压缩超限资源（登录 Banner 284K→99K、删除无引用 560K 大图，此前已处理）。附带说明：B-06 的 radio 交互规范化未包含在本次，仍开放 | R-08、B-17、R-06（部分）、N-05（部分） |
+| 2026-10-11 | v1.0 | 重构 | 员工端下线 + 请求层 | 一、员工端整体下线：删除 pages/staff、pages/staffOrder 及 app.json 注册、orderList 员工入口/注释/isStaff、img/staff_search.png，员工操作迁移至独立业务后台（B-08/B-10/N-02 随之关闭）。二、R-02 统一请求层落地：新建 utils/request.js（Promise 化 wx.request/wx.uploadFile、BASE_URL 自动拼接、可选 loading、网络失败统一提示），app.js/login/index/checkOut/orderList/orderDetail/wxPay 全部替换为 request 调用（B-16 关闭）；登录链路改为 Promise 链。三、顺带修复：B-05 保险切换重复计价、B-07 取消/退款二次确认、B-12 goPay 防重复提交锁、checkOut OCR 失败 loading 永挂与静默无提示、wxPay 获取支付参数失败无回调、B-14 globalData.source 补声明。四、死代码清理：删除 utils/http.js、upload.js、subscribe.js、date.js 及各页注释死代码（R-04/R-05 关闭，R-07/R-09 部分） | B-05、B-07、B-08、B-10、B-12、B-14、B-16、R-02、R-04、R-05、R-07、R-09、N-02 |
 | 2026-10-11 | v0.10 | 修复 | 首页选址 | 修复手动选择地址崩溃（Cannot read properties of undefined (reading 'dataset')）：根因是 getUserPoi 丢弃了点击事件对象 e，chooseLocate 回调仅传 (res, type, address_name)，而 setAddress 期望 (res, type, e, add_name)，导致 e 实为地址字符串、add_name 为 undefined；改为 getUserPoi(e) 接住事件并经箭头闭包转发。该 bug 为历史遗留（此前选址命中支持城市即必崩），并补上 setAddress select 分支缺失的 break | B-12 |
 | 2026-10-11 | v0.9 | 修复 | 定位 / 提审合规 | 解决提审提示"接口未正确配置：wx.getLocation"：该调用仅存在于腾讯地图 SDK 的兜底定位分支（本项目调用方均显式传入坐标，运行时不会触发），将 SDK 内 getWXLocation 改为仅透传 fail/complete 回调、不再发起精确定位；删除无引用的 qqmap-wx-jssdk.min.js（内部同样含该调用）；移除 requiredPrivateInfos 中未使用的 choosePoi。定位链路维持 getFuzzyLocation + chooseLocation 不变 | B-19、R-09 |
 | 2026-10-11 | v0.8 | 修复 | tabBar / 工程配置 | 修复 tabBar 图标裂图：因 project.private.config.json 的 ignoreDevUnusedFiles 与 project.config.json 的 ignoreUploadUnusedFiles 开启，工具依赖分析未识别 app.json 中 tabBar iconPath 的静态引用，将图标误过滤出编译产物；两项均已关闭。已验证 4 张图标 PNG（200×200、约 3KB）完好 | R-09 |

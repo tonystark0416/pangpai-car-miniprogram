@@ -3,5 +3,5 @@
     "datetimepicker":  "/components/datetimepicker/datetimepicker"
   },
   "navigationBarTitleText": "庞派出行",
-  "backgroundTextStyle": "light"
+  "backgroundTextStyle": "dark"
 }

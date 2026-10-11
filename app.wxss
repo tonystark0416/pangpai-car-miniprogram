@@ -1,4 +1,64 @@
-/**app.wxss**/
-page{
-  /* background-color: #000000 */
+/**app.wxss —— 全局样式基线与设计变量（iOS 风格，R-08）**/
+page {
+  /* 设计变量（iOS 系统色） */
+  --pp-bg: #F2F2F7;        /* 页面背景 systemGroupedBackground */
+  --pp-card: #FFFFFF;      /* 卡片背景 */
+  --pp-text: #1C1C1E;      /* 主文字 */
+  --pp-text-2: #8E8E93;    /* 次级文字 */
+  --pp-sep: #E5E5EA;       /* 分隔线 */
+  --pp-blue: #007AFF;      /* 主色 */
+  --pp-green: #34C759;
+  --pp-orange: #FF9500;
+  --pp-red: #FF3B30;
+  --pp-radius: 24rpx;
+  --pp-radius-lg: 32rpx;
+
+  background-color: var(--pp-bg);
+  color: var(--pp-text);
+  font-size: 30rpx;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 通用卡片 */
+.pp-card {
+  background-color: var(--pp-card);
+  border-radius: var(--pp-radius);
+  margin: 20rpx 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 通用小节标题 */
+.pp-section-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--pp-text);
+}
+
+/* iOS 胶囊主按钮（配合 <button class="pp-btn-primary">） */
+.pp-btn-primary {
+  background-color: var(--pp-blue);
+  color: #FFFFFF;
+  border-radius: 88rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 96rpx;
+  height: 96rpx;
+}
+.pp-btn-primary::after {
+  border: none;
+}
+
+/* iOS 次级按钮（浅底描边） */
+.pp-btn-plain {
+  background-color: var(--pp-card);
+  color: var(--pp-text);
+  border: 2rpx solid var(--pp-sep);
+  border-radius: 88rpx;
+  font-size: 32rpx;
+  line-height: 88rpx;
+  height: 88rpx;
+}
+.pp-btn-plain::after {
+  border: none;
 }

@@ -5,11 +5,9 @@
 const app = getApp();
 
 //引入文件
-const sub = require ("../../utils/subscribe.js");
 const util = require('../../utils/util.js');
 const locate = require('../../utils/locate.js');
-const config = require('../../utils/config.js');
-// const QQMapWX =  require('../../utils/qqmap-wx-jssdk1.2/qqmap-wx-jssdk.js');
+const { request } = require('../../utils/request.js');
 
 Page({
   data: {
@@ -23,8 +21,7 @@ Page({
     begin_time_txt:'选择取车时间',  //传给组件
     end_time_txt:'选择还车时间',  //传给组件
     quche_sourceTime:'',  //传给组件
-    huanche_sourceTime:'', //传给组件
-    subTemplate:[]
+    huanche_sourceTime:'' //传给组件
   },
 
   
@@ -145,30 +142,21 @@ Page({
 
   //获取推荐汽车列表，页面加载调用
   getRecommendCarList:function (pageNum) {
-    var that = this;
-    let url = config.BASE_URL + "/getCarList";
-    wx.request({
-      url: url,
+    request({
+      url: '/getCarList',
       data:{
         pageNum:pageNum
-      },
-      success(res) {
-        console.log(res)
-        that.setData({
-          recCarList: res.data.list
-        })
-      },
-      fail(res){
-        wx.showLoading({
-          title: '网络有问题，请重启小程序',
-        })
       }
+    }).then((data) => {
+      console.log(data)
+      this.setData({
+        recCarList: data.list
+      })
     })
   },
 
   //首页点击列表item时调用
   clickItem:function(e){
-    // sub.subscribeTemplate(this.data.subTemplate);
     if (!app.globalData.pickUpAddress||!app.globalData.returnAddress) {
       wx.showToast({
         title: '请先输入取车和还车地址',
@@ -193,10 +181,6 @@ Page({
 
   //加载时调用
   onLoad(option) {
-    //获取订阅模版
-    // sub.getTemplate('index',(res)=>{
-    //   this.data.subTemplate = res
-    // })
     locate.getLocate(this.setAddress); //获取用户定位,传入设置地址的回调函数
     console.log(decodeURIComponent(option.scene)) 
     app.globalData.source = option.scene;

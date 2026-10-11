@@ -1,18 +1,17 @@
 <!-- pages/orderList/orderList.wxml订单列表页面 -->
-<view class="staff_entrance" wx:if="{{isStaff==true}}" bind:tap="clickToStaff">点击进入业务员管理页面</view>
 <view class="nologin" bind:tap="goLogin" hidden="{{islogin}}">请先进行登录</view>
 <view class="noOrder" hidden="{{noOrder}}">暂无订单</view>
 <view class="order_list_page">
   <view class="order_list_item" wx:for="{{orderList}}" wx:key="index" wx:for-index="indexs" wx:for-item="items" bindtap='goOrderDetail' data-ordersn='{{items.order_sn}}'>
     <view class="order_info_1">
       <view class="order_book_time">预定于 {{items.create_time}}</view>
-        <view class="order_status" wx:if="{{items.order_status==-2}}">已取消</view>
-        <view class="order_status" wx:if="{{items.order_status==-1}}">未支付</view>
-        <view class="order_status" wx:if="{{items.order_status==0}}">已支付</view>
-        <view class="order_status" wx:if="{{items.order_status==1}}">租车中</view>
-        <view class="order_status" wx:if="{{items.order_status==2}}">退款中</view>
-        <view class="order_status" wx:if="{{items.order_status==3}}">已退款</view>
-        <view class="order_status" wx:if="{{items.order_status==4}}">已完成</view>
+        <view class="order_status st_cancel" wx:if="{{items.order_status==-2}}">已取消</view>
+        <view class="order_status st_unpay" wx:if="{{items.order_status==-1}}">未支付</view>
+        <view class="order_status st_paid" wx:if="{{items.order_status==0}}">已支付</view>
+        <view class="order_status st_renting" wx:if="{{items.order_status==1}}">租车中</view>
+        <view class="order_status st_refunding" wx:if="{{items.order_status==2}}">退款中</view>
+        <view class="order_status st_refunded" wx:if="{{items.order_status==3}}">已退款</view>
+        <view class="order_status st_done" wx:if="{{items.order_status==4}}">已完成</view>
     </view>
     <hr class="line-style"/>
     <view class="order_info_2">

@@ -5,13 +5,14 @@
   </view>
   <view class = "loginForm">
     <view class="b_login">
-      <button type="primary" plain="true" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">手机号一键登陆</button>
+      <button class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">手机号一键登录</button>
     </view>
     <view class="agreement">
-      <!-- <radio-group bindchange="radioChange"> -->
-        <radio  bindchange="radioChange" /> 
-        <!-- <text>我已阅读并同意</text><text class="agreement">《庞派租车会员注册协议》</text>  -->
-      <!-- </radio-group> -->
+      <checkbox-group bindchange="agreementChange">
+        <checkbox value="agree" checked="{{agreement}}" />
+        <text class="agreement_text">我已阅读并同意</text>
+        <text class="agreement_link">《庞派租车会员注册协议》</text>
+      </checkbox-group>
     </view>
   </view>
 </view>

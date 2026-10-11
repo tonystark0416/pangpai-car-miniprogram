@@ -1,14 +1,11 @@
 // pages/orderDetail/orderDetail.js
 
-
 //引入请求js文件
 import wxPay from "../../utils/wxPay.js";
+const { request } = require('../../utils/request.js');
 
 // 获取应用实例
 const app = getApp();
-const util = require('../../utils/util.js');
-const config = require('../../utils/config.js');
-
 
 Page({
 
@@ -18,22 +15,30 @@ Page({
   data: {
     orderInfo:{}
   },
-  
-  //取消订单
+
+  //取消订单（B-07：增加二次确认）
   cancelOrder(){
-    wx.request({
-      url: config.BASE_URL + '/car/route.php',
-      data:{
-        service:'cancelOrder',
-        orderSn:this.data.orderInfo.order_sn
-      },
-      success:res=>{
-        console.log(res);
-        this.setData({
-          "orderInfo.order_status":-2
-        })
-        wx.showToast({
-          title: '取消成功',
+    wx.showModal({
+      title: '提示',
+      content: '确认取消该订单吗？取消后不可恢复。',
+      success: (modalRes) => {
+        if (!modalRes.confirm) {
+          return;
+        }
+        request({
+          url: '/car/route.php',
+          data:{
+            service:'cancelOrder',
+            orderSn:this.data.orderInfo.order_sn
+          }
+        }).then((data) => {
+          console.log(data);
+          this.setData({
+            "orderInfo.order_status":-2
+          })
+          wx.showToast({
+            title: '取消成功',
+          })
         })
       }
     })
@@ -41,44 +46,51 @@ Page({
 
   //获取订单详情
   getOrderDetail(orderSn){
-    wx.request({
-      url: config.BASE_URL + '/getOrderDetail',
+    request({
+      url: '/getOrderDetail',
       data:{
         orderSn:orderSn,
         uid:app.globalData.userid
-      },
-      success:res=>{
-        console.log(res);
-        this.setData({
-          orderInfo:res.data.result
-        })
       }
+    }).then((data) => {
+      console.log(data);
+      this.setData({
+        orderInfo:data.result
+      })
     })
-  }, 
+  },
 
-  //申请退款
+  //申请退款（B-07：增加二次确认）
   refund(){
-    wx.request({
-      url: config.BASE_URL + '/car/route.php',
-      data:{
-        service:'userRefundOrder',
-        orderSn:this.data.orderInfo.order_sn
-      },
-      success:res=>{
-        console.log(res);
-        if (res.data.code==201) {
-          wx.showToast({
-            title: '申请退款失败',
-            icon:'error',
-            mask:true
-          })
-        }else if (res.data.code==200) {
-          wx.showToast({
-            title: '申请退款成功',
-            icon:'success',
-            mask:true
-          })
+    wx.showModal({
+      title: '提示',
+      content: '确认对该订单申请退款吗？',
+      success: (modalRes) => {
+        if (!modalRes.confirm) {
+          return;
         }
+        request({
+          url: '/car/route.php',
+          data:{
+            service:'userRefundOrder',
+            orderSn:this.data.orderInfo.order_sn
+          }
+        }).then((data) => {
+          console.log(data);
+          if (data.code==201) {
+            wx.showToast({
+              title: '申请退款失败',
+              icon:'error',
+              mask:true
+            })
+          }else if (data.code==200) {
+            wx.showToast({
+              title: '申请退款成功',
+              icon:'success',
+              mask:true
+            })
+          }
+        })
       }
     })
   },
@@ -105,10 +117,11 @@ Page({
         wx.redirectTo({
           url: "/pages/orderDetail/orderDetail?orderSn="+that.data.orderInfo.order_sn
         })
-      }, 2000) 
+      }, 2000)
     }else{
       wx.showToast({
         title: '支付失败，请重新支付',
+        icon:'none',
         success:function(){
           wx.redirectTo({
             url: "/pages/orderDetail/orderDetail?orderSn="+that.data.orderInfo.order_sn
@@ -118,7 +131,6 @@ Page({
     }
   },
 
-
   /**
    * 生命周期函数--监听页面加载
    */
@@ -126,55 +138,4 @@ Page({
     console.log(options.orderSn)
     this.getOrderDetail(options.orderSn)
   },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  // onShareAppMessage() {
-  //   wx.hideShareMenu({
-  //     menus: ['shareAppMessage', 'shareTimeline']
-  //   })
-  // }
 })

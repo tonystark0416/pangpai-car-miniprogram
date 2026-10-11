@@ -1,77 +1,94 @@
-/* pages/orderList/orderList.wxss */
-page{
-  background-color: #000000;
+/* pages/orderList/orderList.wxss —— iOS 风格 */
+
+.nologin, .noOrder {
+  margin-top: 160rpx;
+  text-align: center;
+  font-size: 34rpx;
+  color: var(--pp-text-2);
 }
 
-.staff_entrance{
-  background-color: black;
-  text-align: center;
-  height: 100rpx;
-  color: white;
-  border-radius: 20rpx;
-  margin: 20rpx;
-  line-height: 100rpx;
-}
-
-.nologin,.noOrder{
-  margin-top: 100rpx;
-  text-align: center;
-  font-size: 50rpx;
-}
-.order_list_page{
-  height: 100vh;
+.order_list_page {
+  min-height: 100vh;
   width: 100%;
+  padding: 8rpx 0 40rpx;
+  box-sizing: border-box;
 }
 
-.order_list_item{
+.order_list_item {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  margin: 20rpx;
-  border-radius: 20rpx;
-  background-color: white;
-  height: 600rpx;
+  margin: 20rpx 24rpx;
+  border-radius: var(--pp-radius);
+  background-color: var(--pp-card);
+  height: 560rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
-.order_info_1{
-  padding-top: 20rpx;
-  padding-left: 25rpx;
-  padding-right: 25rpx;
+.order_info_1 {
+  padding: 26rpx 30rpx 20rpx;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
 }
 
-.order_info_1 .order_book_time,.order_status{
-  font-size: 32rpx;
-  color: gray;
+.order_info_1 .order_book_time {
+  font-size: 28rpx;
+  color: var(--pp-text-2);
 }
 
+/* 订单状态：iOS 语义色 */
+.order_status {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.st_cancel { color: var(--pp-text-2); }
+.st_unpay { color: var(--pp-orange); }
+.st_paid { color: var(--pp-blue); }
+.st_renting { color: var(--pp-green); }
+.st_refunding { color: var(--pp-orange); }
+.st_refunded { color: var(--pp-text-2); }
+.st_done { color: var(--pp-green); }
 
-
-.order_list_item .line-style{
-  background:gray;
-  height: 3rpx;
+.order_list_item .line-style {
+  background: var(--pp-sep);
+  height: 1rpx;
   width: 90%;
-  /* position: relative; */
-  margin-top: 5%;
+  margin-top: 4%;
   align-self: center;
+  border: none;
 }
 
-.order_info_2{
+.order_info_2 {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
 }
 
-.order_time_address{
-  padding-left: 25rpx;
+.order_time_address {
+  padding-left: 30rpx;
+  padding-right: 30rpx;
+  font-size: 26rpx;
+  color: var(--pp-text-2);
+  line-height: 1.8;
 }
-.order_car_info{
-  padding-left: 25rpx;
-  padding-right: 25rpx;
+.order_car_info {
+  padding-left: 30rpx;
+  padding-right: 30rpx;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
+}
+.car_info {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--pp-text);
+}
+.order_cost {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--pp-red);
 }

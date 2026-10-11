@@ -1,14 +1,14 @@
 <!--pages/orderDetail/orderDetail.wxml-->
 <view class="order_detail_page">
   <view class="order_info_status">
-    <view class="order_status" wx:if="{{orderInfo.order_status==-2}}">已取消</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==-1}}">未支付</view>
+    <view class="order_status st_cancel" wx:if="{{orderInfo.order_status==-2}}">已取消</view>
+    <view class="order_status st_unpay" wx:if="{{orderInfo.order_status==-1}}">未支付</view>
     <view class="unpay_des" wx:if="{{orderInfo.order_status==-1}}">订单将于5分钟后自动取消</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==0}}">已支付</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==1}}">租车中</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==2}}">退款中</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==3}}">已退款</view>
-    <view class="order_status" wx:if="{{orderInfo.order_status==4}}">已完成</view>
+    <view class="order_status st_paid" wx:if="{{orderInfo.order_status==0}}">已支付</view>
+    <view class="order_status st_renting" wx:if="{{orderInfo.order_status==1}}">租车中</view>
+    <view class="order_status st_refunding" wx:if="{{orderInfo.order_status==2}}">退款中</view>
+    <view class="order_status st_refunded" wx:if="{{orderInfo.order_status==3}}">已退款</view>
+    <view class="order_status st_done" wx:if="{{orderInfo.order_status==4}}">已完成</view>
   </view>
   <view class="order_info">
     <view class="order_car_info">
@@ -38,10 +38,6 @@
       <view class="cost_name">服务费用</view>
       <view class="cost_price">¥{{orderInfo.server_total_price}}</view>
     </view>
-    <!-- <view class="cost3">
-      <view class="cost_name">清洁费用</view>
-      <view class="cost_price">¥{{orderInfo.clean_price}}</view>
-    </view> -->
     <view class="cost3">
       <view class="cost_name">司机费用</view>
       <view class="cost_price">¥{{orderInfo.driver_price}}</view>
@@ -54,10 +50,6 @@
       <view class="cost_name">上门取车费用</view>
       <view class="cost_price">¥{{orderInfo.door_return_price}}</view>
     </view>
-    <!-- <view class="cost3">
-      <view class="cost_name">优惠金额</view>
-      <view class="cost_price">-¥{{orderInfo.pms_price}}</view>
-    </view> -->
     <hr class="line-style"/>
     <view class="cost_all">
       <view class="cost_name">总费用</view>
@@ -65,9 +57,9 @@
     </view>
   </view>
   <view class="operation">
-    <view class="op_pay" wx:if="{{orderInfo.order_status==-1}}"><button bind:tap="goPay">发起支付</button></view>
-    <view class="op_cancel" wx:if="{{orderInfo.order_status==-1}}" bind:tap="cancelOrder"><button>取消订单</button></view>
-    <view class="op_refund" wx:if="{{orderInfo.order_status==0}}"><button bind:tap="refund">申请退款</button></view>
-    <view class="op_kefu" wx:if="{{orderInfo.order_status==0}}"><button open-type="contact">联系客服</button></view>
+    <view class="op_pay" wx:if="{{orderInfo.order_status==-1}}"><button class="btn_pay" bind:tap="goPay">发起支付</button></view>
+    <view class="op_cancel" wx:if="{{orderInfo.order_status==-1}}" bind:tap="cancelOrder"><button class="btn_cancel">取消订单</button></view>
+    <view class="op_refund" wx:if="{{orderInfo.order_status==0}}"><button class="btn_refund" bind:tap="refund">申请退款</button></view>
+    <view class="op_kefu" wx:if="{{orderInfo.order_status==0}}"><button class="btn_kefu" open-type="contact">联系客服</button></view>
   </view>
 </view>
