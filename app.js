@@ -1,6 +1,7 @@
 // app.js
 
 import http from "utils/http.js";
+const config = require("utils/config.js");
 
 
 App({
@@ -21,7 +22,7 @@ App({
         success: function(res) {
           console.log('这是登陆code：'+res.code)
           // 发送 res.code 到后台换取 openId, sessionKey, unionId
-          let url  = 'https://pangpai-car.com/getOpenid?code='+res.code;
+          let url  = config.BASE_URL + '/getOpenid?code='+res.code;
           http.getReq(url,function(res) {
             console.log('这是openid：'+res.result.openid)
             wx.setStorageSync('openid', res.result.openid); //保存openid到本地
@@ -31,7 +32,7 @@ App({
             }
             //拿到openid后，请求trylogin接口
             wx.request({
-              url: 'https://pangpai-car.com/tryLogin',
+              url: config.BASE_URL + '/tryLogin',
               data:{
                 openid:res.result.openid
               },

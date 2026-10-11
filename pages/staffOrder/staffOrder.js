@@ -4,6 +4,7 @@ import wxPay from "../../utils/wxPay.js";
 // 获取应用实例
 const app = getApp();
 const util = require('../../utils/util.js');
+const config = require('../../utils/config.js');
 
 
 Page({
@@ -48,7 +49,7 @@ Page({
   //变更订单
   updateOrder(orderSn,upStatus){
     wx.request({
-      url: 'https://pangpai-car.com/car/staff/api.php?service=updateOrder',
+      url: config.BASE_URL + '/car/staff/api.php?service=updateOrder',
       method:"POST",
       data:{
         "orderSn":orderSn,
@@ -75,7 +76,7 @@ Page({
   //获取订单详情
   getOrderDetail(orderSn){
     wx.request({
-      url: 'https://pangpai-car.com/car/route.php',
+      url: config.BASE_URL + '/car/route.php',
       data:{
         service:'getOrderDetail',
         orderSn:orderSn

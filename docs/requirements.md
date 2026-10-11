@@ -120,7 +120,7 @@ staff（查询列表）→ staffOrder（详情）
 
 ## 五、前端视角接口清单
 
-> ⚠️ 后端域名硬编码散落在各文件中（约 40+ 处），未做统一配置；同域内同时存在 REST 风格与 `route.php?service=` / `staff/api.php?service=` 网关风格，需治理（见 R-01）。
+> ~~⚠️ 后端域名硬编码散落在各文件中（约 40+ 处），未做统一配置~~（v0.7 已收敛至 `utils/config.js` 的 BASE_URL，全小程序唯一域名入口；接口风格混用问题仍在，见 R-01）。
 
 | 接口（方法） | 用途 | 使用位置 |
 | --- | --- | --- |
@@ -207,7 +207,7 @@ staff（查询列表）→ staffOrder（详情）
 ### R 类（重构 / 工程质量）
 | 编号 | 问题 | 建议 |
 | --- | --- | --- |
-| R-01 | API 域名硬编码 40+ 处、三种接口风格混用 | 建 `config/api.js` 域名/超时/环境配置；网关类接口统一封装映射 |
+| R-01 | ~~API 域名硬编码 40+ 处~~（v0.7 已收敛至 `utils/config.js` BASE_URL）；三种接口风格混用仍待治理 | ~~建 `config/api.js` 域名/超时/环境配置~~（已完成域名部分）；网关类接口统一封装映射 |
 | R-02 | `utils/http.js` 未被采用；页面散落裸 wx.request 且无统一鉴权/错误/埋点 | 以 Promise 重构 request 层（成功态、错误态、loading、token）并替换页面 |
 | R-03 | 订单状态文案/颜色在 orderDetail、orderList、staff、staffOrder 四页重复 | 抽公共 `order-status` 组件 或 wxs 映射 |
 | R-04 | 大量注释遗留代码（首页 tab、优惠模块、checkIsStaff、订阅模板、司机校验等） | 清理前用 git 留档，一次性删除死代码 |
@@ -246,5 +246,9 @@ staff（查询列表）→ staffOrder（详情）
 
 | 日期 | 版本 | 类型 | 模块 | 说明 | 关联条目 |
 | --- | --- | --- | --- | --- | --- |
-| 2026-09-10 | v0.2 | 删除 | AI 页 | 下线并删除 AI 对话页：移除 pages/ai 全部文件、app.json 页面注册、project.private.config.json 调试启动项；删除仅被其引用的 assets 头像与 utils/utf8decode.js | B-13、N-04 |
+| 2026-10-11 | v0.7 | 重构 | 全局接口配置 | API 域名收敛（R-01 域名部分）：新建 `utils/config.js` 定义唯一 `BASE_URL`（当前线上 https://pangpai-car.com）；13 个文件（app.js、8 个页面、utils/upload、utils/wxPay、utils/subscribe、contract 页）共 25 处硬编码域名全部改为 `config.BASE_URL + 路径`；合同页 web-view src 改为由 contract.js 经 data 注入。此后环境切换只需改 config.js 一行。业务逻辑零改动 | R-01、R-02 |
+| 2026-10-11 | v0.6 | 修改 | 全局接口配置 | 接口环境由本地切回线上：全小程序 25 处请求地址由 http://localhost:3002 统一替换回 https://pangpai-car.com | R-01、R-02 |
+| 2026-10-11 | v0.5 | 修改 | 全局接口配置 | 接口环境再次切换为本地联调：全小程序 25 处请求地址由 https://pangpai-car.com 统一替换为 http://localhost:3002 | R-01、R-02 |
+| 2026-10-11 | v0.4 | 修改 | 全局接口配置 | 接口环境由本地切回线上：全小程序 25 处请求地址由 http://localhost:3002 统一替换回 https://pangpai-car.com，本地联调结束 | R-01、R-02 |
+| 2026-10-11 | v0.3 | 修改 | 全局接口配置 | 接口环境切换为本地联调：全小程序 25 处请求地址（app.js、login、index、checkOut、orderDetail、orderList、staff、staffOrder、contract web-view、utils/upload、utils/wxPay、utils/subscribe 注释）由 https://pangpai-car.com 统一替换为 http://localhost:3002；后续按用户指令在本地/线上地址间整体切换 | R-01、R-02 |
 | 2026-09-10 | v0.1 | 文档 | - | 首次建档：完成项目全量盘点，输出代码结构与问题审查报告；本文档作为后续迭代追踪基线，尚未改动业务代码 | - |

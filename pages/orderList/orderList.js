@@ -1,5 +1,7 @@
 // pages/orderList/orderList.js
 
+const config = require('../../utils/config.js');
+
 
 
 // 获取应用实例
@@ -28,7 +30,7 @@ Page({
   //校验是否员工
   // checkIsStaff(uid){
   //   wx.request({
-  //     url: 'https://pangpai-car.com/car/staff/api.php?service=checkIsStaff',
+  //     url: config.BASE_URL + '/car/staff/api.php?service=checkIsStaff',
   //     method: 'POST',
   //     data:{
   //       uid:uid
@@ -55,7 +57,7 @@ Page({
   // 获取用户订单
   getOrderList(){
     wx.request({
-      url: 'https://pangpai-car.com/getOrderList',
+      url: config.BASE_URL + '/getOrderList',
       data:{
         uid:app.globalData.userid,
         pageNumber:1

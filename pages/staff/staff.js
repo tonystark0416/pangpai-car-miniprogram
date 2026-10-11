@@ -1,5 +1,6 @@
 // 获取应用实例
 const app = getApp();
+const config = require('../../utils/config.js');
 
 
 Page({
@@ -38,7 +39,7 @@ Page({
   //获取后台订单列表
   getOrderListByStaff(page,query){
     wx.request({
-      url: 'https://pangpai-car.com/car/staff/api.php?service=queryOrderListByStaff',
+      url: config.BASE_URL + '/car/staff/api.php?service=queryOrderListByStaff',
       data:{
         "page": page,
         "query":query

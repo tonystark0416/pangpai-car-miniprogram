@@ -1,9 +1,11 @@
 // utils/wxPay.js
 
+const config = require('./config.js');
+
 function wxPayment(openid,body,total_fee,out_trade_no,callback) {
   var that = this;
   wx.request({
-    url: 'https://pangpai-car.com/getWxPay',
+    url: config.BASE_URL + '/getWxPay',
     method:'GET',
     data: {
       openid:openid,

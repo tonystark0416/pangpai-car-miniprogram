@@ -3,6 +3,7 @@
 //引入请求js文件
 import wxPay from "../../utils/wxPay.js";
 const util = require('../../utils/util.js');
+const config = require('../../utils/config.js');
 // const sub = require("../../utils/subscribe.js");
 
 
@@ -56,7 +57,7 @@ Page({
   //获取司机费用,初始化
   getSijiPrice() {
     wx.request({
-      url: 'https://pangpai-car.com/getDriverPrice',
+      url: config.BASE_URL + '/getDriverPrice',
       success: (res) => {
         this.setData({
           'siji_info.siji_price': res.data.driver_price
@@ -68,7 +69,7 @@ Page({
   //获取保险费用
   getInsurance() {
     wx.request({
-      url: 'https://pangpai-car.com/getInsurancePrice',
+      url: config.BASE_URL + '/getInsurancePrice',
       success: (res) => {
         // checkOutData.insurancePrice = res.data.insurancePrice_l1;
         this.setData({
@@ -136,7 +137,7 @@ Page({
 
   getDriverInfo(uid) {
     wx.request({
-      url: 'https://pangpai-car.com/getUserDriverInfo',
+      url: config.BASE_URL + '/getUserDriverInfo',
       data: {
         uid: uid
       },
@@ -159,7 +160,7 @@ Page({
 
   updateDriverInfo(driver_idcard_name, driver_idcard_number, driver_idcard_url, driver_idcard_birth, uid) {
     wx.request({
-      url: 'https://pangpai-car.com/updateUserDriverInfo',
+      url: config.BASE_URL + '/updateUserDriverInfo',
       data: {
         uid: uid,
         driver_idcard_name: driver_idcard_name,
@@ -186,7 +187,7 @@ Page({
         wx.uploadFile({
           filePath: res.tempFiles[0].tempFilePath,
           name: 'file',
-          url: 'https://pangpai-car.com/upload',
+          url: config.BASE_URL + '/upload',
           success: function (res) {
             console.log(JSON.parse(res.data)); //打印上传文件结果
             that.data.driver_info.driver_idcard_url = JSON.parse(res.data).path; //设置驾驶员身份证的图片路径到本地
@@ -196,7 +197,7 @@ Page({
             })
             if (JSON.parse(res.data).code == 200) {
               wx.request({ //获取身份证对应的姓名和身份证号码，传入图片url
-                url: 'https://pangpai-car.com/getIdCardInfo',
+                url: config.BASE_URL + '/getIdCardInfo',
                 data: {
                   img_url: JSON.parse(res.data).path
                 },
@@ -250,7 +251,7 @@ Page({
   checkOut: function (checkOutData) {
     let that = this;
     wx.request({
-      url: 'https://pangpai-car.com/checkout',
+      url: config.BASE_URL + '/checkout',
       data: {
         carId: checkOutData.carId,
         uid: checkOutData.userid,
@@ -306,7 +307,7 @@ Page({
 
     let that = this;
     wx.request({
-      url: 'https://pangpai-car.com/createOrder',
+      url: config.BASE_URL + '/createOrder',
       method: 'POST',
       data: {
         checkOutArray: that.data.checkoutInfo

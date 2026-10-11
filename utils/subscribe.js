@@ -3,6 +3,7 @@
  * 封装订阅功能
  */
 var http = require("http.js");
+var config = require("./config.js");
 
 function subscribeTemplate(tmplIds){
   wx.requestSubscribeMessage({ //微信消息订阅功能
@@ -14,7 +15,7 @@ function subscribeTemplate(tmplIds){
 }
 
 // function getTemplate(subScene,cb){
-//   let url  = "https://pangpai-car.com/car/route.php?service=getMsgTemplate&subScene="+subScene;
+//   let url  = config.BASE_URL + "/car/route.php?service=getMsgTemplate&subScene="+subScene;
 //   http.getReq(url,cb)
 // }
 

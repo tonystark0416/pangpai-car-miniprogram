@@ -7,6 +7,7 @@ import wxPay from "../../utils/wxPay.js";
 // 获取应用实例
 const app = getApp();
 const util = require('../../utils/util.js');
+const config = require('../../utils/config.js');
 
 
 Page({
@@ -21,7 +22,7 @@ Page({
   //取消订单
   cancelOrder(){
     wx.request({
-      url: 'https://pangpai-car.com/car/route.php',
+      url: config.BASE_URL + '/car/route.php',
       data:{
         service:'cancelOrder',
         orderSn:this.data.orderInfo.order_sn
@@ -41,7 +42,7 @@ Page({
   //获取订单详情
   getOrderDetail(orderSn){
     wx.request({
-      url: 'https://pangpai-car.com/getOrderDetail',
+      url: config.BASE_URL + '/getOrderDetail',
       data:{
         orderSn:orderSn,
         uid:app.globalData.userid
@@ -58,7 +59,7 @@ Page({
   //申请退款
   refund(){
     wx.request({
-      url: 'https://pangpai-car.com/car/route.php',
+      url: config.BASE_URL + '/car/route.php',
       data:{
         service:'userRefundOrder',
         orderSn:this.data.orderInfo.order_sn

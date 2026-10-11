@@ -1,5 +1,7 @@
 // pages/login/login.js
 
+const config = require('../../utils/config.js');
+
 // 获取应用实例
 const app = getApp()
 
@@ -30,7 +32,7 @@ Page({
     console.log(e.detail.errMsg) // 回调信息（成功失败都会返回）
     console.log(e.detail.errno)  // 错误码（失败时返回）
     wx.request({
-      url: 'https://pangpai-car.com/car/route.php',
+      url: config.BASE_URL + '/car/route.php',
       data:{
         service: 'userRegister',
         openid: app.globalData.openid,

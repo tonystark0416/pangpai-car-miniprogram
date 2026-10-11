@@ -8,6 +8,7 @@ const app = getApp();
 const sub = require ("../../utils/subscribe.js");
 const util = require('../../utils/util.js');
 const locate = require('../../utils/locate.js');
+const config = require('../../utils/config.js');
 // const QQMapWX =  require('../../utils/qqmap-wx-jssdk1.2/qqmap-wx-jssdk.js');
 
 Page({
@@ -142,7 +143,7 @@ Page({
   //获取推荐汽车列表，页面加载调用
   getRecommendCarList:function (pageNum) {
     var that = this;
-    let url = "https://pangpai-car.com/getCarList";
+    let url = config.BASE_URL + "/getCarList";
     wx.request({
       url: url,
       data:{

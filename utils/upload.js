@@ -1,5 +1,7 @@
 
 //上传函数
+const config = require('./config.js');
+
 function uploadPic(){
   let that = this;
   wx.chooseMedia({
@@ -12,7 +14,7 @@ function uploadPic(){
       wx.uploadFile({
         filePath: res.tempFiles[0].tempFilePath,
         name: 'file',
-        url: 'https://pangpai-car.com/car/upload.php',
+        url: config.BASE_URL + '/car/upload.php',
         success:function(res){
           console.log(JSON.parse(res.data)); //打印上传文件结果
           wx.showLoading({
@@ -21,7 +23,7 @@ function uploadPic(){
           })
           if (JSON.parse(res.data).code==200) {
             wx.request({
-              url: 'https://pangpai-car.com/car/route.php',
+              url: config.BASE_URL + '/car/route.php',
               data:{
                 service:'getIdCard',
                 img_url:JSON.parse(res.data).path
