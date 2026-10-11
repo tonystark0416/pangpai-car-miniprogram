@@ -246,6 +246,9 @@ staff（查询列表）→ staffOrder（详情）
 
 | 日期 | 版本 | 类型 | 模块 | 说明 | 关联条目 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-11 | v0.10 | 修复 | 首页选址 | 修复手动选择地址崩溃（Cannot read properties of undefined (reading 'dataset')）：根因是 getUserPoi 丢弃了点击事件对象 e，chooseLocate 回调仅传 (res, type, address_name)，而 setAddress 期望 (res, type, e, add_name)，导致 e 实为地址字符串、add_name 为 undefined；改为 getUserPoi(e) 接住事件并经箭头闭包转发。该 bug 为历史遗留（此前选址命中支持城市即必崩），并补上 setAddress select 分支缺失的 break | B-12 |
+| 2026-10-11 | v0.9 | 修复 | 定位 / 提审合规 | 解决提审提示"接口未正确配置：wx.getLocation"：该调用仅存在于腾讯地图 SDK 的兜底定位分支（本项目调用方均显式传入坐标，运行时不会触发），将 SDK 内 getWXLocation 改为仅透传 fail/complete 回调、不再发起精确定位；删除无引用的 qqmap-wx-jssdk.min.js（内部同样含该调用）；移除 requiredPrivateInfos 中未使用的 choosePoi。定位链路维持 getFuzzyLocation + chooseLocation 不变 | B-19、R-09 |
+| 2026-10-11 | v0.8 | 修复 | tabBar / 工程配置 | 修复 tabBar 图标裂图：因 project.private.config.json 的 ignoreDevUnusedFiles 与 project.config.json 的 ignoreUploadUnusedFiles 开启，工具依赖分析未识别 app.json 中 tabBar iconPath 的静态引用，将图标误过滤出编译产物；两项均已关闭。已验证 4 张图标 PNG（200×200、约 3KB）完好 | R-09 |
 | 2026-10-11 | v0.7 | 重构 | 全局接口配置 | API 域名收敛（R-01 域名部分）：新建 `utils/config.js` 定义唯一 `BASE_URL`（当前线上 https://pangpai-car.com）；13 个文件（app.js、8 个页面、utils/upload、utils/wxPay、utils/subscribe、contract 页）共 25 处硬编码域名全部改为 `config.BASE_URL + 路径`；合同页 web-view src 改为由 contract.js 经 data 注入。此后环境切换只需改 config.js 一行。业务逻辑零改动 | R-01、R-02 |
 | 2026-10-11 | v0.6 | 修改 | 全局接口配置 | 接口环境由本地切回线上：全小程序 25 处请求地址由 http://localhost:3002 统一替换回 https://pangpai-car.com | R-01、R-02 |
 | 2026-10-11 | v0.5 | 修改 | 全局接口配置 | 接口环境再次切换为本地联调：全小程序 25 处请求地址由 https://pangpai-car.com 统一替换为 http://localhost:3002 | R-01、R-02 |

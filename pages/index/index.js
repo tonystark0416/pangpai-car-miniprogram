@@ -112,6 +112,7 @@ Page({
             return_address:add_name
           })
         }
+        break;
 
 
       default:
@@ -122,9 +123,11 @@ Page({
   },
 
   //手动选择地址
-  getUserPoi () {
-    locate.chooseLocate(this.setAddress)
-    // console.log(e)
+  getUserPoi (e) {
+    // 接住点击事件（含 data-type 取车/还车标识），回调完成后转发给 setAddress
+    locate.chooseLocate((res, type, add_name) => {
+      this.setAddress(res, type, e, add_name)
+    })
   },
 
 

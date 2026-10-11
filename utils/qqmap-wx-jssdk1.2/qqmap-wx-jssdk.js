@@ -339,12 +339,11 @@ var Utils = {
      * 使用微信接口进行定位
      */
     getWXLocation(success, fail, complete) {
-        wx.getLocation({
-            type: 'gcj02',
-            success: success,
-            fail: fail,
-            complete: complete
-        });
+        // 本项目定位统一走模糊定位/手动选点（见 utils/locate.js），
+        // 精确定位接口未在 requiredPrivateInfos 声明，故此处不再发起精确定位调用，
+        // 仅透传 fail/complete 回调以保证调用方逻辑兼容（本项目调用方均显式传入 location，不会进入此分支）
+        fail && fail({ errMsg: 'getLocation is disabled in this project' });
+        complete && complete({ errMsg: 'getLocation is disabled in this project' });
     },
 
     /**

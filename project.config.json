@@ -32,7 +32,7 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "ignoreUploadUnusedFiles": true,
+    "ignoreUploadUnusedFiles": false,
     "condition": true,
     "compileWorklet": false,
     "localPlugins": false,
