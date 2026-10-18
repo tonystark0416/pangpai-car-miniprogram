@@ -15,6 +15,15 @@ function wxPayment(openid, body, total_fee, out_trade_no, callback) {
     }
   }).then((data) => {
     console.log(data);
+    // 失败响应为 {success:false, message}，需先判断再取 paymentParams
+    if (!data || !data.success || !data.data || !data.data.paymentParams) {
+      wx.showToast({
+        title: (data && data.message) || '获取支付参数失败',
+        icon: 'none'
+      })
+      callback({ errMsg: 'getWxPay:fail' });
+      return;
+    }
     const paymentParams = data.data.paymentParams;
     wx.requestPayment({
       nonceStr: paymentParams.nonceStr,

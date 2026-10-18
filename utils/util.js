@@ -31,8 +31,24 @@ function subTen(value) {
   }
 
 
+//订单时间字段格式化：接口返回毫秒时间戳字符串（如订单列表的 pickup_time），
+//部分接口后端已格式化为 yyyy-MM-dd HH:mm:ss，此处兼容两者
+function formatOrderTime(value) {
+  if (value === null || value === undefined || value === '') {
+    return ''
+  }
+  const str = String(value);
+  // 纯数字按毫秒时间戳处理
+  if (/^\d+$/.test(str)) {
+    return formatTimestamp(Number(str))
+  }
+  // 后端已格式化的直接返回
+  return str
+}
+
 module.exports = {
   formatTime,
   subTen,
-  formatTimestamp
+  formatTimestamp,
+  formatOrderTime
 }

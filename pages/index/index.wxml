@@ -52,18 +52,42 @@
       </view>
   </view> -->
 
-  <!-- 流式布局 -->
+  <!-- 瀑布流：双列各自流式排列，卡片高度由图片与内容自然决定（不再等高） -->
   <view class="con_list">
-    <view class="list" wx:for="{{recCarList}}" wx:key='list' wx:for-item="item" bindtap="clickItem" data-car_id="{{item.id}}">
-      <view class="img_list">
-        <image src="{{item.image_url}}" mode="widthFix"></image>
-      </view>
-        <view class="txt_list">{{item.car_name}}</view>
-        <view class="txt_tag">{{item.des}}</view>
-        <view class="price_info">
-          <view class="txt_price">单价¥ {{filters.toFix(item.day_price)}}/天</view>
-          <view class="txt_Bonus">优惠价¥ {{filters.toFix(item.promotion_day_price)}}/天</view>
-        </view>
+    <view class="flow_col">
+      <block wx:for="{{carColLeft}}" wx:key="id">
+        <template is="carCard" data="{{item: item}}" />
+      </block>
+    </view>
+    <view class="flow_col">
+      <block wx:for="{{carColRight}}" wx:key="id">
+        <template is="carCard" data="{{item: item}}" />
+      </block>
     </view>
   </view>
 </view>
+
+<!-- 车辆卡片模板：两列复用 -->
+<template name="carCard">
+  <view class="list" bindtap="clickItem" data-car_id="{{item.id}}">
+    <view class="img_list">
+      <image src="{{item.image_url}}" mode="widthFix"></image>
+    </view>
+    <view class="txt_list">{{item.car_name}}</view>
+    <!-- 车辆标签：填充胶囊 + 文字，空值不渲染 -->
+    <view class="tag_wrap" wx:if="{{item.des}}">
+      <text class="txt_tag">{{item.des}}</text>
+    </view>
+    <view class="price_info">
+      <!-- 优惠价：主视觉，大号数字 + 弱化符号与单位（payPrice 已在 JS 数值化） -->
+      <view class="txt_Bonus">
+        <text class="price_symbol">¥</text><text class="price_num">{{filters.toFix(item.payPrice)}}</text><text class="price_unit">/天</text>
+      </view>
+      <!-- 原价与优惠力度：仅在有差价时展示（hasDiscount 在 JS 里按数值比较得出） -->
+      <view class="price_sub" wx:if="{{item.hasDiscount}}">
+        <text class="txt_price">¥{{filters.toFix(item.day_price)}}</text>
+        <text class="save_tag">省¥{{filters.toFix(item.savePrice)}}</text>
+      </view>
+    </view>
+  </view>
+</template>

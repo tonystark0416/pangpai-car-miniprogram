@@ -149,8 +149,28 @@ Page({
       }
     }).then((data) => {
       console.log(data)
+      //成功返回 {code:0, list:[...]}；v1.6.7 起后端已按 sort 排序且只返回上架车辆，前端不再二次排序
+      //价格字段后端可能返回字符串（如 "300"），必须数值化再比较：
+      //WXML 里直接写 a > b 会按字典序比较（"300" > "80" 为 false），导致优惠标签时有时无
+      const list = ((data && data.list) || []).map((item) => {
+        const dayPrice = Number(item.day_price) || 0;
+        let promoPrice = Number(item.promotion_day_price) || 0;
+        //优惠价缺失或为 0 时回退到原价，避免展示 ¥0 / ¥NaN
+        if (promoPrice <= 0) {
+          promoPrice = dayPrice;
+        }
+        const savePrice = dayPrice - promoPrice;
+        return Object.assign({}, item, {
+          payPrice: promoPrice,      //展示用的优惠价（已数值化）
+          hasDiscount: savePrice > 0, //是否有差价
+          savePrice: savePrice        //省多少钱
+        });
+      });
+      //瀑布流：按索引奇偶拆成左右两列，卡片不等高，高度由图片与内容自适应
       this.setData({
-        recCarList: data.list
+        recCarList: list,
+        carColLeft: list.filter((item, index) => index % 2 === 0),
+        carColRight: list.filter((item, index) => index % 2 === 1)
       })
     })
   },

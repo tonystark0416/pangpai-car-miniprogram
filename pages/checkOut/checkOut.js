@@ -9,6 +9,15 @@ const util = require('../../utils/util.js');
 // 获取应用实例
 const app = getApp();
 
+// 从身份证号解析出生日期（OCR 未返回 birth 时兜底）：第 7-14 位为 yyyyMMdd
+function birthFromIdCard(idNumber) {
+  if (!idNumber || String(idNumber).length < 14) {
+    return '';
+  }
+  const id = String(idNumber);
+  return id.substring(6, 10) + '-' + id.substring(10, 12) + '-' + id.substring(12, 14);
+}
+
 // 定义结算参数结构
 let checkOutData = {
   // userid / contact_phone / insurancePrice / pickUpTime / returnTime /
@@ -67,6 +76,12 @@ Page({
         'insuranceInfo.insurancePrice_l1': data.insurancePrice_l1,
         'insuranceInfo.insurancePrice_l2': data.insurancePrice_l2
       })
+      //v1.6.12：后端对 insurancePrice 做白名单校验（0/1/120），基础档统一以后端返回的 l1 为准，
+      //避免本地硬编码与后端可选值不一致导致结算 400
+      if (data && data.insurancePrice_l1 !== undefined && checkOutData.insurancePrice !== data.insurancePrice_l1) {
+        checkOutData.insurancePrice = data.insurancePrice_l1;
+        this.checkOut(checkOutData)
+      }
     })
   },
 
@@ -128,7 +143,8 @@ Page({
         uid: uid
       }
     }).then((data) => {
-      if (data) {
+      //无记录时后端返回裸数字 -1（不是 code 结构），需按对象判断，否则会把 undefined 写进表单
+      if (data && typeof data === 'object' && data.id) {
         this.setData({
           "driver_info.driver_idcard_birth": data.driver_idcard_birth,
           "driver_info.driver_idcard_url": data.driver_idcard_url,
@@ -152,7 +168,14 @@ Page({
         driver_idcard_birth: driver_idcard_birth
       }
     }).then((data) => {
+      //返回裸数字：0 成功 / -1 失败
       console.log(data);
+      if (Number(data) !== 0) {
+        wx.showToast({
+          title: '身份信息保存失败',
+          icon: 'none'
+        })
+      }
     })
   },
 
@@ -194,21 +217,25 @@ Page({
           }
           wx.hideLoading();
           console.log(idRes);
-          if (idRes.errcode == 0) {
-            that.updateDriverInfo(idRes.name, idRes.id, that.data.driver_info.driver_idcard_url, idRes.birth, app.globalData.userid)
+          //成功返回 {type, name, id, ...}（不一定带 errcode）；失败才带 errcode（如 101000 invalid image url）
+          const ocrOk = idRes && (idRes.errcode === undefined || idRes.errcode === 0) && idRes.id;
+          if (ocrOk) {
+            //部分 OCR 结果不含 birth，从身份证号第 7-14 位兜底解析出生日期
+            const birth = idRes.birth || birthFromIdCard(idRes.id);
+            that.updateDriverInfo(idRes.name, idRes.id, that.data.driver_info.driver_idcard_url, birth, app.globalData.userid)
             wx.showToast({
               title: '校验成功',
             })
             that.setData({
               "driver_info.driver_idcard_name": idRes.name,
               "driver_info.driver_idcard_number": idRes.id,
-              "driver_info.driver_idcard_birth": idRes.birth,
+              "driver_info.driver_idcard_birth": birth,
               idcard_text: true, //隐藏前端
               idcard_result: false //展示结果
             })
           } else {
             wx.showToast({
-              title: '校验失败请重新上传',
+              title: (idRes && idRes.errmsg) || '校验失败请重新上传',
               icon: 'none'
             })
           }
@@ -244,6 +271,17 @@ Page({
 
   //获取结算信息,计算价格等所有
   checkOut: function (checkOutData) {
+    //v1.6.12 后端新增校验，前端先做前置拦截避免无效请求
+    if (Number(checkOutData.returnTime) <= Number(checkOutData.pickUpTime)) {
+      wx.showToast({
+        title: '还车时间必须晚于取车时间',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 1500)
+      return;
+    }
     request({
       url: '/checkout',
       data: {
@@ -258,13 +296,19 @@ Page({
         driver_price: checkOutData.driver_price
       }
     }).then((data) => {
-      if (data.code == 201) {
-        wx.showLoading({
-          title: '缺少结算信息',
-          success: function () {
-            wx.navigateBack();
-          }
+      //成功返回裸对象（无 code 包裹）；失败带 code + msg：
+      // -1 参数缺失；v1.6.12 新增 400 还车时间必须晚于取车时间 / 取车·还车时间不合法 /
+      // 保险金额不合法（0/1/120）/ 司机费用不合法（0/400）/ 车辆不存在，无法结算
+      if (!data || (data.code !== undefined && data.code !== 200)) {
+        wx.showToast({
+          title: (data && data.msg) || '缺少结算信息',
+          icon: 'none',
+          duration: 2500
         })
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1800)
+        return;
       }
       console.log(data);
       this.setData({
@@ -303,15 +347,34 @@ Page({
         checkOutArray: that.data.checkoutInfo
       }
     }).then((data) => {
+      // v1.6.8/v1.6.12：下单失败会返回 {code:400, msg}（车辆已下架/不存在、
+      // 还车时间早于取车、保险或司机金额不在白名单等），先判失败再取 result
+      if (!data || data.code === 400 || data.code === 500 || !data.result) {
+        wx.showToast({
+          title: (data && data.msg) || '下单失败，请重试',
+          icon: 'none',
+          duration: 2500
+        })
+        that.setData({
+          paying: false
+        })
+        return;
+      }
+      const order = data.result;
       that.setData({
-        currentOrderSn: data.result.order_sn
+        currentOrderSn: order.order_sn
       })
+      //金额以服务端重算为准，本地结算值仅用于展示，此处留痕便于排查差异
+      if (Number(that.data.checkoutInfo.total_price) !== Number(order.total_price)) {
+        console.log('服务端金额与本地结算不一致，以服务端为准：', that.data.checkoutInfo.total_price, '→', order.total_price);
+      }
       console.log(data)
       console.log('going to pay...');
-      let orderSn = data.result.order_sn;
-      let totalFee = (data.result.total_price) * 100;
+      // v1.6.12：金额以服务端重算结果为准，不能用本地 checkoutInfo 的计算值，否则支付回调核验会失败
+      // totalFee 单位：分（与支付回调 total_fee === total_price×100 的核验口径一致）
+      let totalFee = order.total_price * 100;
       console.log(totalFee);
-      wxPay.wxPayment(app.globalData.openid, '庞派租车服务', totalFee, orderSn, that.checkPay)
+      wxPay.wxPayment(app.globalData.openid, '庞派租车服务', totalFee, order.order_sn, that.checkPay)
     }).catch((err) => {
       //网络层失败释放提交锁，允许用户重试
       that.setData({
@@ -328,24 +391,41 @@ Page({
     that.setData({
       paying: false
     })
-    if (res.errMsg == "requestPayment:ok") { //如果支付成功
-      wx.showLoading({
-        title: '检查支付中',
+    const orderSn = that.data.currentOrderSn;
+    const goDetail = function () {
+      wx.redirectTo({
+        url: "/pages/orderDetail/orderDetail?orderSn=" + orderSn
       })
-      setTimeout(function () {
+    }
+    if (res.errMsg == "requestPayment:ok") { //如果支付成功
+      //改为查询后端支付结果，替代原来固定等待 2 秒的盲等
+      wx.showLoading({
+        title: '确认支付结果中',
+        mask: true
+      })
+      request({
+        url: '/queryWxPayOrder',
+        data: {
+          outTradeNo: orderSn
+        }
+      }).then((payRes) => {
         wx.hideLoading();
-        wx.redirectTo({
-          url: "/pages/orderDetail/orderDetail?orderSn=" + that.data.currentOrderSn
+        const paid = payRes && payRes.success && payRes.data && payRes.data.trade_state === 'SUCCESS';
+        wx.showToast({
+          title: paid ? '支付成功' : '支付结果确认中',
+          icon: 'none'
         })
-      }, 2000)
+        goDetail()
+      }).catch(() => {
+        wx.hideLoading();
+        goDetail()
+      })
     } else {
       wx.showToast({
         title: '支付失败，请重新支付',
         icon: 'none',
         success: function () {
-          wx.redirectTo({
-            url: "/pages/orderDetail/orderDetail?orderSn=" + that.data.currentOrderSn
-          })
+          goDetail()
         }
       })
     }

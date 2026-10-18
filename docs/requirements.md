@@ -6,7 +6,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 文档创建时间 | 2026-09-10 |
-| 当前代码基线 | v1.0（2026-10-11：员工端下线、统一请求层重构） |
+| 当前代码基线 | v1.4（2026-10-18：对齐后端接口文档 v1.6.12 计价口径与服务端金额；此前 v1.3 对接 `/cancelRefund`、v1.2 对齐 v1.6.8 接口、v1.1 iOS 风格改版、v1.0 员工端下线 + 统一请求层） |
 | 项目类型 | 微信小程序（原生，无框架/npm 依赖）+ 多端壳配置（iOS/Android mini-app） |
 | 后端 | PHP 服务（域名 https://pangpai-car.com，部分接口走 car/route.php、car/staff/api.php 网关式入口） |
 | 归属 | 庞派出行 · 租车业务 |
@@ -85,23 +85,49 @@ staff（查询列表）→ staffOrder（详情）
   → 状态 1 租车中 →「已完成」→ 状态 4 已完成
 ```
 
-### 3.4 订单状态机（前后端字段 order_status 约定，多页面重复展示）
+### 3.4 订单状态机（v1.2 对齐后端 v1.6.8 枚举）
+
+> ⚠️ **枚举已变更**：v1.2 起废弃旧枚举（-2 已取消 / -1 未支付 / 0 已支付 / 1 租车中 / 2 退款中 / 3 已退款 / 4 已完成），改为 **双字段**：`pay_status`（支付状态）+ `order_status`（履约状态）。前端统一走 `utils/orderStatus.js` 的 `getOrderStatus()` 映射，页面不再写死数值。
+
+**pay_status（支付状态）**
 
 | 值 | 语义 | 用户端可用操作 |
 | --- | --- | --- |
-| -2 | 已取消 | - |
-| -1 | 未支付（5 分钟后自动取消提示） | 继续支付 / 取消订单（二次确认） |
-| 0 | 已支付 | 申请退款（二次确认）/ 联系客服 |
-| 1 | 租车中 | - |
-| 2 | 退款中 | - |
-| 3 | 已退款 | - |
-| 4 | 已完成 | - |
+| 0 | 待支付（5 分钟后自动取消提示） | 继续支付 / 取消订单（二次确认） |
+| 1 | 已支付 | 见下方履约状态 |
+| 2 | 已退款 | - |
+| 3 | 支付失败 | 继续支付 / 取消订单 |
+
+**order_status（履约状态）**
+
+| 值 | 语义 | 用户端可用操作 |
+| --- | --- | --- |
+| 0 | 待取车 | 申请退款（二次确认）/ 联系客服 |
+| 1 | 已取车（租车中） | - |
+| 2 | 已还车 | - |
+| 3 | 已完成 | - |
+| 4 | 已取消 | - |
+
+**前端展示优先级**：已退款 > 已取消 > 待支付/支付失败 > 按履约状态展示（待取车/已取车/已还车/已完成）。
+
+**自助取消/退款约束（v1.6.11 后端强校验）**：
+
+| 场景 | 条件 | 前端入口 | 接口 |
+| --- | --- | --- | --- |
+| 未支付/支付失败 | `pay_status=0/3` | **仅发起支付**（暂不支持取消：旧网关已下线、后端暂无接口，见 B-22） | - |
+| 已支付未取车，取消并退款 | `pay_status=1` + `order_status=0` | 取消订单并退款 | `POST /cancelRefund`（入参 `orderSn`、`uid`） |
+| 已取车及之后 | `order_status≥1` | 仅联系客服（后端拒绝自助退款：已取车无法取消退款） | - |
+
+> 退款成功后订单自动变为 **已退款（`pay_status=2`）+ 已取消（`order_status=4`）**，前端以服务端返回为准重新拉取详情；退款金额默认全额。
 
 ---
 
 ## 四、关键业务规则与费用口径
 
 1. **计价请求**：结算页实时调用 `/checkout`，入参含 carId/uid/contact_phone/取还时间地点/insurancePrice/driver_price，返回各分项与合计。
+   - **v1.6.12 计算口径**：租用天数 = 时长 ÷ 24 小时**向上取整且至少 1 天**（`rentDay` 为整数，如相差 25 小时 = 2 天、相差 23 小时 = 1 天）；此前为按小时比例的小数，前端展示已同步为整数。
+   - **v1.6.12 金额来源**：金额由服务端按车辆实时价**重算**，与前端传参无关；`insurancePrice`（白名单 `0/1/120`）与 `driver_price`（白名单 `0/400`）仅作为选项输入并校验。前端基础档保费统一取 `/getInsurancePrice` 返回的 `l1`，不再硬编码。
+   - **v1.6.12 新增失败码**：`400` 还车时间必须晚于取车时间 / 取车·还车时间不合法 / 保险金额不合法 / 司机费用不合法 / 车辆不存在无法结算；均按 `res.msg` 提示用户。前端已加「还车晚于取车」前置拦截。
 2. **费用分项**（口径以接口返回为准，前端仅展示）：
    - 车辆租金（每日租金 × 天数，四舍五入）
    - 车辆整备/清洁费用（checkOut 展示为 clean_price；订单详情用户端未展示，员工端展示）
@@ -110,7 +136,7 @@ staff（查询列表）→ staffOrder（详情）
    - 司机人工费（可选，8 小时/天）
    - 优惠金额（历史功能，代码中已注释停用，字段 pms_* 保留）
 3. **保险**：基础保障已选（车损 1500 内自付 / 三者 50 万）；升级优享可选（车损免赔 / 三者 100 万）。
-4. **支付金额**：客户端以 `createOrder` 返回 `total_price × 100`（分）调 `/getWxPay`；服务端需自行校验金额（防篡改）。
+4. **支付金额**：`/getWxPay` 的 `totalFee` 单位为**分**（后端文档 v1.6.11 更正：此前文档误写为元，代码与支付回调核验口径一直是分），前端上送 `total_price × 100`；支付回调会核验 `total_fee === total_price×100`，不等则支付不落库（防篡改，见 B-11）。
 5. **身份证实名**：`/upload` 上传图片 → `/getIdCardInfo` OCR 回填 → `/updateUserDriverInfo` 保存。
 6. **分享/推广**：首页 onLoad 读取 `option.scene` 存入 `app.globalData.source`，随下单以 `extend` 字段提交（渠道来源追踪）。
 
@@ -123,26 +149,30 @@ staff（查询列表）→ staffOrder（详情）
 | 接口（方法） | 用途 | 使用位置 |
 | --- | --- | --- |
 | `/getOpenid?code=` (GET) | code 换 openid | app.js |
-| `/tryLogin` (GET) | openid 静默登录取 userid | app.js |
+| `/tryLogin` (GET) | openid 静默登录取 userid（v1.2 起补传可选 `unionid`） | app.js |
 | `car/route.php?service=userRegister` (POST) | 手机号动态令牌注册 | login.js |
-| `/getCarList` | 分页车辆列表 | index.js |
+| `/getCarList` | 分页车辆列表（`pageNum` 从 1 开始；v1.6.7 起后端按 `sort` 排序且只返回上架车，前端不二次排序） | index.js |
 | `/getDriverPrice` | 司机服务日价 | checkOut.js |
 | `/getInsurancePrice` | 两档保险日价 | checkOut.js |
 | `/getUserDriverInfo` | 获取已存驾驶员信息 | checkOut.js |
 | `/updateUserDriverInfo` | 保存驾驶员信息 | checkOut.js |
 | `/upload` (wx.uploadFile) | 上传身份证图片 | checkOut.js |
 | `/getIdCardInfo` | OCR 识别身份证 | checkOut.js |
-| `/checkout` | 实时计价 | checkOut.js |
-| `/createOrder` (POST) | 创建订单 | checkOut.js |
-| `/getWxPay` | 微信统一下单取支付参数 | utils/wxPay.js |
-| `/getOrderList` | 用户订单列表 | orderList.js |
-| `/getOrderDetail` | 用户订单详情 | orderDetail.js |
-| `car/route.php?service=cancelOrder` | 取消订单 | orderDetail.js |
-| `car/route.php?service=userRefundOrder` | 申请退款 | orderDetail.js |
+| `/checkout` | 实时计价（v1.6.12：天数按 24h 向上取整、金额服务端重算；新增 4 类 400 校验错误） | checkOut.js |
+| `/createOrder` (POST) | 创建订单（v1.6.8 车辆下架/不存在、v1.6.12 时间非法/保险或司机金额不合法均返回 `400 {code,msg}`；**金额以服务端重算的 `result.total_price` 为准**，勿用本地计算值支付） | checkOut.js |
+| `/getWxPay` | 微信统一下单取支付参数（`totalFee` 单位元；失败 `{success:false,message}`） | utils/wxPay.js |
+| `/queryWxPayOrder` | 查询支付结果（v1.2 新增接入，替代原 2 秒盲等） | checkOut.js / orderDetail.js |
+| `/getOrderList` | 用户订单列表（`pageNumber` 从 1 开始；空数据 `code:201`） | orderList.js |
+| `/getOrderDetail` | 用户订单详情（时间字段后端已格式化；空数据 `code:201`） | orderDetail.js |
+| `/cancelRefund` (POST) | **取消订单并退款**（v1.6.11 新增，入参 `{orderSn, uid}`；仅 `pay_status=1` + `order_status=0` 可用，成功后订单变已退款+已取消） | orderDetail.js |
+| ~~`/applyRefund` (POST)~~ | ~~申请退款~~（v1.6.11 **后端已删除，现返回 404**；其为微信退款裸透传、不更新订单状态，已由 `/cancelRefund` 取代） | - |
 
+> 响应结构不统一（历史遗留，后端已确认）：`{code:200,result}` / `{message,result}` / `{success,data}` / 裸对象或裸数字，需按接口逐一判断。
 > 已注释下线：`getMsgTemplate`（订阅消息模板）、`checkIsStaff`（员工校验）、`upload.php`（旧上传入口）。
 > v1.0 随员工端整体下线：`queryOrderListByStaff`、`updateOrder`、员工端 `getOrderDetail`。
+> v1.3 随旧网关下线删除：`car/route.php?service=cancelOrder`（未支付订单取消，后端暂无替代接口，前端入口一并移除，见 B-22）。仍在使用的旧网关接口仅剩 `car/route.php?service=userRegister`（手机号注册）。
 > v1.0 起全部请求经 `utils/request.js` 统一请求层发起（R-02）。
+> v1.2 依据后端《小程序端接口文档》v1.6.8（2026-10-17）核对更新。
 
 ---
 
@@ -192,7 +222,7 @@ staff（查询列表）→ staffOrder（详情）
 | B-08 | ~~员工端无权限守卫~~（v1.0 员工端（staff/staffOrder 两页）整体下线删除，员工操作迁移至独立业务后台，小程序内不再存在越权面） | - | - |
 | B-09 | orderList：~~`isStaff` 恒 false（入口注释）~~（v1.0 已随员工端删除）；`noOrder` 逻辑语义颠倒（有单时置 true）；未登录直接访问该 tab 提示"请先登录"但无跳转处理 | 展示逻辑混乱 | 重构列表状态：loading/空/列表/未登录 |
 | B-10 | ~~staff 页 `getOrderListByStaff` 在 success 中同步 `this.data.page++` 并直接改 data 未用 setData（部分场景）~~（v1.0 已随员工端删除） | - | - |
-| B-11 | 支付金额由前端 `total_price*100` 上送 /getWxPay；若服务端不校验存在篡改风险 | 资损风险（依赖后端） | 服务端以订单为准重新计价，前端仅展示 |
+| B-11 | ~~支付金额单位不一致~~（v1.3 定稿：`/getWxPay.totalFee` 单位为**分**，前端上送 `total_price × 100`；后端支付回调已核验 `total_fee === total_price×100`，不等则支付不落库） | - | - |
 | B-12 | checkOut `goPay` 无防重复提交；`createOrder` 成功后立即调支付，双击可能重复创建订单 | 重复下单 | 加提交锁、按钮 loading |
 | B-13 | ~~AI 页残留 localhost 地址、他项目文案，无页面入口~~（v0.2 已整体下线删除该页，关闭） | - | - |
 | B-14 | 首页 onLoad 直接读 `option.scene` 并 `decodeURIComponent`，非扫码场景下无 scene（~~`globalData.source` 未在 app.js 声明即赋值~~ v1.0 已补声明） | 潜在异常与约定混乱 | scene 判空仍待处理 |
@@ -200,14 +230,17 @@ staff（查询列表）→ staffOrder（详情）
 | B-16 | ~~全局无统一 loading/错误处理；http.js 封装在页面中基本未使用（页面散落 30+ 处裸 wx.request）~~（v1.0 统一请求层 `utils/request.js` 落地并全量替换，见 R-02） | - | - |
 | B-17 | ~~login 页协议：radio 与文案分离、无《协议》链接跳转；agreement 判断恒真逻辑可疑（radioChange 恒设 true）~~（v1.1 已修复：改为 checkbox-group 真实开关 agreementChange，恢复协议文案显示） | ~~协议同意无效化~~ | ~~用 checkbox/协议弹窗规范处理~~ |
 | B-18 | staff/staffOrder/orderDetail 等页面 json 缺 navigationBarTitleText（部分显示默认路径标题） | 体验不一致 | 补全页面标题 |
-| B-19 | `app.json requiredPrivateInfos` 声明了 `choosePoi` 但代码未使用；使用 `getFuzzyLocation` + `chooseLocation`，隐私描述 `scope.userLocation` 与 fuzzy 场景需对齐 | 审核/合规风险 | 核对真实使用项并同步隐私声明 |
+| B-19 | `app.json requiredPrivateInfos` 声明了 `choosePoi` 但代码未使用（v0.9 已移除该项）；使用 `getFuzzyLocation` + `chooseLocation`，隐私描述 `scope.userLocation` 与 fuzzy 场景需对齐 | 审核/合规风险 | 核对真实使用项并同步隐私声明 |
+| B-20 | ~~前端订单状态枚举（-2/-1/0/1/2/3/4）与后端 v1.6.8 新枚举（pay_status + order_status 双字段）不一致，导致状态显示错误、支付/取消/退款按钮条件失效~~（v1.2 已全量对齐，新增 `utils/orderStatus.js` 统一映射） | - | - |
+| B-21 | ~~支付后依赖固定 2 秒等待判断结果 / 下单失败未处理 400 响应 / OCR 成功响应不含 errcode 被误判失败 / getUserDriverInfo 返回裸 -1 被当作有效记录~~（v1.2 已修复：接入 `/queryWxPayOrder` 真实查询、createOrder 先判 code 400/500、OCR 判定改为 errcode 缺失即成功、驾驶证查询按对象判断） | - | - |
+| B-22 | **未支付订单（`pay_status=0/3`）暂不支持取消**：旧网关 `car/route.php?service=cancelOrder` 已下线，后端暂无替代接口（`/cancelRefund` 仅覆盖「已支付未取车」）。v1.3 已删除前端取消入口与旧网关调用代码 | 未支付订单只能支付或等待自动取消（若后端有 5 分钟自动取消逻辑） | 产品侧确认是否接受；若需支持，请后端提供新接口后前端再加回入口 |
 
 ### R 类（重构 / 工程质量）
 | 编号 | 问题 | 建议 |
 | --- | --- | --- |
 | R-01 | ~~API 域名硬编码 40+ 处~~（v0.7 已收敛至 `utils/config.js` BASE_URL）；三种接口风格混用仍待治理 | ~~建 `config/api.js` 域名/超时/环境配置~~（已完成域名部分）；网关类接口统一封装映射 |
 | R-02 | ~~`utils/http.js` 未被采用；页面散落裸 wx.request 且无统一鉴权/错误/埋点~~（v1.0 已落地 `utils/request.js` 统一请求层：Promise 化、统一 BASE_URL 拼接、可选 loading、网络失败统一提示并 reject；全部页面/工具已替换完成） | - | - |
-| R-03 | 订单状态文案/颜色在 orderDetail、orderList 两页重复（v1.0 员工端两页删除后范围缩小） | 抽公共 `order-status` 组件 或 wxs 映射 |
+| R-03 | ~~订单状态文案/颜色在 orderDetail、orderList 两页重复~~（v1.2 已抽公共映射 `utils/orderStatus.js`：统一输出状态文案、语义色 class 与可执行操作，两页不再写死枚举） | - | - |
 | R-04 | ~~大量注释遗留代码（首页 tab、优惠模块、checkIsStaff、订阅模板、司机校验等）~~（v1.0 已清理：删除 http/upload/subscribe/date 死文件及各页注释死代码） | - | - |
 | R-05 | ~~checkOut 身份证上传逻辑与 utils/upload.js 重复（后者已废弃）~~（v1.0 已删除 utils/upload.js，上传统一走 request.js 的 uploadFile） | - | - |
 | R-06 | 目录/命名：`filter.wxs.toFix` 注释"保留两位"实为取整；页面/组件注释与文件名不符等 | 统一命名与注释 |
@@ -231,7 +264,7 @@ staff（查询列表）→ staffOrder（详情）
 
 ## 九、后续迭代优先级建议（Roadmap 草稿，v1.0 更新）
 
-1. **P0（安全/合规，先行）**：~~B-08 员工权限守卫~~（v1.0 员工端下线已消除）；B-19 隐私声明对齐（公众平台后台操作）；B-11 金额防篡改确认（需后端）。
+1. **P0（安全/合规，先行）**：~~B-08 员工权限守卫~~（v1.0 员工端下线已消除）；B-19 隐私声明对齐（公众平台后台操作）；B-11 服务端金额校验确认 + **B-22 取消订单接口路径确认**（均需后端）。
 2. **P1（核心链路稳定）**：B-01/B-02/B-03/B-04、~~B-05/B-12~~（v1.0 已修）——登录时序 Promise 化收尾、下单参数 storage 兜底、时间边界。
 3. **P2（工程质量）**：R-03 订单状态组件（两页范围）；R-06/R-07/R-08 命名注释/空模板/样式基线；R-09 工程杂项清理（空 package.json、miniapp 多端壳）。
 4. **P3（体验迭代）**：N-01/N-03/N-05、首页改版、订阅消息/客服能力等，按产品规划推进。
@@ -244,6 +277,9 @@ staff（查询列表）→ staffOrder（详情）
 
 | 日期 | 版本 | 类型 | 模块 | 说明 | 关联条目 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-18 | v1.4 | 对齐 | 结算计价（v1.6.12） | 依据后端接口文档 v1.6.12 对接：1) **租用天数口径变更**（按 24 小时向上取整、至少 1 天，`rentDay` 由小数变整数），结算页三处「四舍五入」文案改为「不足24小时按1天计」；2) **结算失败处理扩展**：除原有 `code:-1` 外，覆盖新增的 4 类 `400` 错误（还车时间早于取车、时间不合法、保险金额不合法 `0/1/120`、司机费用不合法 `0/400`、车辆不存在），统一按 `res.msg` 提示并返回上一页；3) **保险基础档不再硬编码 1**，改为取 `/getInsurancePrice` 返回的 `l1` 并重新计价，避免与后端白名单不一致触发 400；4) 前端新增「还车时间必须晚于取车时间」前置拦截（B-04 的临时兜底）；5) 支付金额明确**以服务端重算的 `result.total_price` 为准**（v1.6.12 服务端忽略前端传来的 rentDay/total_price），本地结算值仅用于展示，差异时 console 留痕 | B-04（部分）、B-11 |
+| 2026-10-18 | v1.3 | 新增 / 修正 | 取消退款 + 支付金额 | 依据后端接口文档 v1.6.11 对接：1) **新增 `POST /cancelRefund`（取消订单并退款）**，入参 `{orderSn, uid}`，仅 `pay_status=1`+`order_status=0` 可用，前端同步加状态前置拦截与二次确认，成功后按 `code===200` 提示 `msg` 并重新拉取详情（订单转为已退款+已取消）；2) **删除 `/applyRefund` 调用**（后端已下线、现返回 404，因其不更新订单状态会导致「钱退了订单仍是已支付」）；3) **`getWxPay.totalFee` 单位回滚为「分」**（v1.6.11 更正文档口径，此前后端文档误写为元），结算页与详情页均改为 `total_price × 100`（B-11 定稿）；4) 状态映射 `utils/orderStatus.js` 增加「已退款优先于已取消」及 `canCancelRefund`/`canKefu` 两个操作开关，详情页按钮为「发起支付」（未支付）、「取消订单并退款」（已支付未取车）、「联系客服」（已支付/已退款期间）；5) **删除未支付订单的取消入口与旧网关代码**：`car/route.php?service=cancelOrder` 已下线，移除 `cancelOrder()` 及 `canCancel` 开关，未支付订单仅保留「发起支付」（B-22） | B-11、B-22、B-07（部分） |
+| 2026-10-17 | v1.2 | 修复 / 对齐 | 全端接口契约 | 依据后端《小程序端接口文档》v1.6.8 核对并修复 16 处入参/出参不一致：**严重项**——① `getWxPay.totalFee` 单位由前端 ×100（分）改为元（此前实付金额放大 100 倍）；② 订单状态枚举全量对齐（旧 -2/-1/0/1/2/3/4 → 新 `pay_status`+`order_status` 双字段），支付/取消/退款按钮条件由映射驱动；③ `createOrder` 新增 400/500 失败分支判断（车辆下架/不存在）；④ OCR 成功响应不含 `errcode` 导致误判失败（改为缺失即成功，并从身份证号兜底解析出生日期）；⑤ `getUserDriverInfo` 无记录返回裸 `-1` 被当作有效记录。**一般项**——结算失败码 201→-1、`getWxPay` 失败 `{success:false}` 判断、`getOpenid` 结果防护并补传 unionid、订单列表取还车时间由毫秒时间戳格式化、`updateUserDriverInfo` 返回 0/-1 判断、首页车辆列表空值兜底。**体验项**——接入 `/queryWxPayOrder` 真实查询支付结果替代 2 秒盲等。新增 `utils/orderStatus.js` 统一状态映射（R-03 关闭）、`util.formatOrderTime()`。退款迁移至 `POST /applyRefund`；取消订单接口文档缺失，沿用旧网关待确认（见 B-22） | B-11、B-20、B-21、B-22、R-03 |
 | 2026-10-11 | v1.1 | UI 重构 | 全局样式与交互 | iOS（苹果）风格全量改版：1) app.wxss 建立设计变量体系（--pp-bg/#F2F2F7、--pp-blue/#007AFF、--pp-text/#1C1C1E 等系统色）与卡片/胶囊按钮基线（R-08 关闭）；2) app.json 导航栏与 tabBar 由全黑改浅色，tabBar 四张图标经 PIL 重新着色（未选中 iOS 灰/选中 iOS 蓝）；3) 六处页面/组件样式全部重写为浅色卡片风格：index（banner 圆角卡片、地址行分隔线、车卡片）、login（蓝色一键登录胶囊按钮、协议文案恢复并改真实勾选，B-17 关闭）、orderList/orderDetail（订单状态 iOS 语义色：蓝/绿/橙/灰、费用卡片、胶囊操作按钮）、checkOut（蓝色主按钮与支付胶囊、checkbox/radio 蓝色选中态）、datetimepicker（浅色填充选择器）；4) 顺带清理 index.wxss 死样式（tab-title/picker_group/b_search 等）；5) 压缩超限资源（登录 Banner 284K→99K、删除无引用 560K 大图，此前已处理）。附带说明：B-06 的 radio 交互规范化未包含在本次，仍开放 | R-08、B-17、R-06（部分）、N-05（部分） |
 | 2026-10-11 | v1.0 | 重构 | 员工端下线 + 请求层 | 一、员工端整体下线：删除 pages/staff、pages/staffOrder 及 app.json 注册、orderList 员工入口/注释/isStaff、img/staff_search.png，员工操作迁移至独立业务后台（B-08/B-10/N-02 随之关闭）。二、R-02 统一请求层落地：新建 utils/request.js（Promise 化 wx.request/wx.uploadFile、BASE_URL 自动拼接、可选 loading、网络失败统一提示），app.js/login/index/checkOut/orderList/orderDetail/wxPay 全部替换为 request 调用（B-16 关闭）；登录链路改为 Promise 链。三、顺带修复：B-05 保险切换重复计价、B-07 取消/退款二次确认、B-12 goPay 防重复提交锁、checkOut OCR 失败 loading 永挂与静默无提示、wxPay 获取支付参数失败无回调、B-14 globalData.source 补声明。四、死代码清理：删除 utils/http.js、upload.js、subscribe.js、date.js 及各页注释死代码（R-04/R-05 关闭，R-07/R-09 部分） | B-05、B-07、B-08、B-10、B-12、B-14、B-16、R-02、R-04、R-05、R-07、R-09、N-02 |
 | 2026-10-11 | v0.10 | 修复 | 首页选址 | 修复手动选择地址崩溃（Cannot read properties of undefined (reading 'dataset')）：根因是 getUserPoi 丢弃了点击事件对象 e，chooseLocate 回调仅传 (res, type, address_name)，而 setAddress 期望 (res, type, e, add_name)，导致 e 实为地址字符串、add_name 为 undefined；改为 getUserPoi(e) 接住事件并经箭头闭包转发。该 bug 为历史遗留（此前选址命中支持城市即必崩），并补上 setAddress select 分支缺失的 break | B-12 |

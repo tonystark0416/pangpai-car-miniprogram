@@ -75,7 +75,7 @@
       <view class="sub-title-name">车辆租金</view>
       <view class="sub-title-cost">¥{{checkoutInfo.rent_total_price}}</view>
     </view>
-    <view class="sub-content">租金每天¥{{checkoutInfo.rent_day_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+    <view class="sub-content">租金每天¥{{checkoutInfo.rent_day_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
     <view class="sub-title">
       <view class="sub-title-name">车辆整备费用</view>
       <view class="sub-title-cost">¥{{checkoutInfo.clean_price}}</view>
@@ -86,7 +86,7 @@
       <view class="sub-title-cost">¥{{checkoutInfo.server_total_price}}</view>
     </view>
     <view class="sub-content">包含基础保障，三者保险等费用</view>
-    <view class="sub-content">保险费每天¥{{checkoutInfo.server_day_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+    <view class="sub-content">保险费每天¥{{checkoutInfo.server_day_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
     <!-- 上门取送费部分 -->
     <view class="sub-title" wx:if="{{siji_server==false}}">
       <view class="sub-title-name">上门送车费</view>
@@ -102,7 +102,7 @@
       <view class="sub-title-name">司机人工费</view>
       <view class="sub-title-cost">¥{{checkoutInfo.driver_total_price}}</view>
     </view>
-    <view class="sub-content" wx:if="{{siji_server==true}}">人工费每天¥{{checkoutInfo.driver_price}},共{{checkoutInfo.rentDay}}天,四舍五入</view>
+    <view class="sub-content" wx:if="{{siji_server==true}}">人工费每天¥{{checkoutInfo.driver_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
   </view>
   <!-- 优惠明细 -->
   <!-- <view class="pms_info">

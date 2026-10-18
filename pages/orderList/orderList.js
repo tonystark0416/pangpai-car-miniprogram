@@ -1,6 +1,8 @@
 // pages/orderList/orderList.js
 
 const { request } = require('../../utils/request.js');
+const { getOrderStatus } = require('../../utils/orderStatus.js');
+const util = require('../../utils/util.js');
 
 // 获取应用实例
 const app = getApp();
@@ -29,18 +31,30 @@ Page({
       url: '/getOrderList',
       data:{
         uid:app.globalData.userid,
-        pageNumber:1
+        pageNumber:1 //页码从 1 开始，不能为 0
       }
     }).then((data) => {
       console.log(data);
-      if (data.code == 200) {
+      //空数据返回 {code:201, msg:'无订单数据'}
+      if (data && data.code == 200 && data.result) {
+        //状态文案/配色由 getOrderStatus 统一映射；取还车时间为毫秒时间戳，需格式化
+        const list = data.result.map((item) => {
+          const status = getOrderStatus(item);
+          return Object.assign({}, item, {
+            statusText: status.text,
+            statusClass: status.class,
+            pickup_time_txt: util.formatOrderTime(item.pickup_time),
+            return_time_txt: util.formatOrderTime(item.return_time)
+          })
+        })
         this.setData({
-          orderList:data.result,
-          noOrder:true
+          orderList:list,
+          noOrder:true //有订单，隐藏"暂无订单"
         })
       }else{
         this.setData({
-          noOrder:false
+          orderList:[],
+          noOrder:false //无订单，展示"暂无订单"
         })
       }
     })
