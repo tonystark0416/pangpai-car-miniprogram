@@ -5,6 +5,26 @@
 <view class="banner">
   <image src="/img/index.jpeg" mode="widthFix"/>
 </view>
+<!-- 首页派券（v1.7.3）：有可领取批次才展示，无批次（含未登录）整块隐藏 -->
+<view class="coupon_zone" wx:if="{{couponList.length > 0}}">
+  <view class="coupon_zone_title">
+    <text class="cz_title">租车优惠券</text>
+    <text class="cz_more" bindtap="goCouponPage">领券中心 ›</text>
+  </view>
+  <scroll-view class="coupon_scroll" scroll-x="{{true}}" show-scrollbar="{{false}}" enhanced="{{true}}">
+    <view class="coupon_card" wx:for="{{couponList}}" wx:key="coupon_id">
+      <view class="cc_left">
+        <text class="cc_symbol">¥</text><text class="cc_amount">{{item.amount}}</text>
+      </view>
+      <view class="cc_right">
+        <view class="cc_name">{{item.name}}</view>
+        <view class="cc_date">{{item.useTimeTxt}}</view>
+      </view>
+      <view class="cc_btn {{item.can_receive ? '' : 'cc_btn_off'}}" bindtap="receiveCoupon" data-index="{{index}}">{{item.btnTxt}}</view>
+    </view>
+  </scroll-view>
+</view>
+
 <!-- 选择时间和地理位置 -->
 <view class="time_locate_zone">
   <!-- 日期组件 -->

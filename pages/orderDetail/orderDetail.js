@@ -19,9 +19,68 @@ Page({
     statusText:'',
     statusClass:'',
     canPay:false,
+    canCancel:false,
     canCancelRefund:false,
     canKefu:false,
     showUnpayTip:false
+  },
+
+  //取消订单（仅未支付订单，v1.6.16 POST /cancelOrder；B-07：增加二次确认）
+  cancelOrder(){
+    const orderInfo = this.data.orderInfo;
+    if (!orderInfo || !orderInfo.order_sn) {
+      return;
+    }
+    //后端强校验：pay_status=0 且 order_status=0，前端同步拦截
+    if (Number(orderInfo.pay_status) !== 0 || Number(orderInfo.order_status) !== 0) {
+      wx.showToast({
+        title: '当前订单状态不支持取消',
+        icon: 'none'
+      })
+      return;
+    }
+    wx.showModal({
+      title: '取消订单',
+      content: '确认取消该未支付订单吗？取消后不可恢复。',
+      success: (modalRes) => {
+        if (!modalRes.confirm) {
+          return;
+        }
+        wx.showLoading({
+          title: '处理中',
+          mask: true
+        })
+        request({
+          url: '/cancelOrder',
+          method: 'POST',
+          data:{
+            orderSn: orderInfo.order_sn,
+            uid: app.globalData.userid
+          }
+        }).then((data) => {
+          wx.hideLoading();
+          console.log(data);
+          //成功 {code:200, msg:'订单已取消'}；失败按 res.msg 提示（含引导走退款流程的文案）
+          if (data && data.code === 200) {
+            wx.showToast({
+              title: data.msg || '订单已取消',
+              icon: 'success',
+              mask: true
+            })
+            //取消后订单置为已取消（order_status=4），pay_status 保持 0，重新拉取详情
+            this.getOrderDetail(orderInfo.order_sn)
+          }else{
+            wx.showToast({
+              title: (data && data.msg) || '取消失败，请稍后重试',
+              icon: 'none',
+              duration: 2500
+            })
+          }
+        }).catch(() => {
+          wx.hideLoading();
+        })
+      }
+    })
   },
 
   //获取订单详情
@@ -48,6 +107,7 @@ Page({
           statusText:'',
           statusClass:'',
           canPay:false,
+          canCancel:false,
           canCancelRefund:false,
           canKefu:false,
           showUnpayTip:false
@@ -58,9 +118,14 @@ Page({
       const status = getOrderStatus(orderInfo);
       this.setData({
         orderInfo:orderInfo,
+        //v1.7.3：实付金额（无券订单后端无该字段时回退总价）
+        payAmount: (orderInfo.pay_amount !== undefined && orderInfo.pay_amount !== null)
+          ? Number(orderInfo.pay_amount)
+          : Number(orderInfo.total_price),
         statusText:status.text,
         statusClass:status.class,
         canPay:status.canPay,
+        canCancel:status.canCancel,
         canCancelRefund:status.canCancelRefund,
         canKefu:status.canKefu,
         showUnpayTip:status.showUnpayTip
@@ -132,8 +197,12 @@ Page({
     console.log('going to second pay...');
     let orderSn = this.data.orderInfo.order_sn;
     console.log(orderSn);
-    // totalFee 单位：分（后端文档 v1.6.11 更正，与支付回调核验口径一致）
-    let totalFee = this.data.orderInfo.total_price * 100;
+    // v1.7.3：支付金额用实付 pay_amount（无券时等于 total_price），服务端会校验金额
+    // totalFee 单位：分（与支付回调 total_fee === 实付×100 的核验口径一致）
+    const payAmount = (this.data.orderInfo.pay_amount !== undefined && this.data.orderInfo.pay_amount !== null)
+      ? Number(this.data.orderInfo.pay_amount)
+      : Number(this.data.orderInfo.total_price);
+    let totalFee = payAmount * 100;
     console.log(totalFee);
     wxPay.wxPayment(app.globalData.openid,'庞派租车服务',totalFee,orderSn,this.checkPay)
   },

@@ -1,0 +1,51 @@
+<!-- pages/coupon/coupon.wxml 优惠券 -->
+<view class="coupon_page">
+
+  <!-- 顶部 Tab：选券模式只显示「我的券包」 -->
+  <view class="cp_tabs" wx:if="{{!selectMode}}">
+    <view class="cp_tab {{tabIndex === 0 ? 'cp_tab_active' : ''}}" bindtap="switchTab" data-index="0">我的券包</view>
+    <view class="cp_tab {{tabIndex === 1 ? 'cp_tab_active' : ''}}" bindtap="switchTab" data-index="1">领券中心</view>
+  </view>
+
+  <!-- 我的券包 -->
+  <view class="cp_my" wx:if="{{tabIndex === 0}}">
+    <view class="cp_tip" wx:if="{{selectMode}}">
+      共 {{usableCount}} 张券可用于本单，点击即可使用（每单限用一张）
+    </view>
+    <view class="cp_empty" wx:if="{{!loading && myCoupons.length === 0}}">暂无优惠券</view>
+    <view class="cp_card {{item.usable ? '' : 'cp_card_off'}} {{selectedSn === item.coupon_sn ? 'cp_card_sel' : ''}}"
+          wx:for="{{myCoupons}}" wx:key="coupon_sn" bindtap="onSelectCoupon" data-index="{{index}}">
+      <view class="cp_left">
+        <text class="cp_symbol">¥</text><text class="cp_amount">{{item.amount}}</text>
+      </view>
+      <view class="cp_mid">
+        <view class="cp_name">{{item.name}}</view>
+        <view class="cp_date">{{item.useTimeTxt}}</view>
+        <view class="cp_reason" wx:if="{{!item.usable && item.unusable_reason}}">{{item.unusable_reason}}</view>
+      </view>
+      <view class="cp_right">
+        <view class="cp_status">{{item.status_text}}</view>
+        <view class="cp_use" wx:if="{{selectMode && item.usable}}">使用</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 领券中心 -->
+  <view class="cp_center" wx:if="{{tabIndex === 1}}">
+    <view class="cp_empty" wx:if="{{centerList.length === 0}}">暂无可领取的优惠券</view>
+    <view class="cp_card" wx:for="{{centerList}}" wx:key="coupon_id">
+      <view class="cp_left">
+        <text class="cp_symbol">¥</text><text class="cp_amount">{{item.amount}}</text>
+      </view>
+      <view class="cp_mid">
+        <view class="cp_name">{{item.name}}</view>
+        <view class="cp_date">{{item.useTimeTxt}}</view>
+        <view class="cp_stock" wx:if="{{item.remain_stock !== undefined}}">剩余 {{item.remain_stock}} 张</view>
+      </view>
+      <view class="cp_right">
+        <view class="cp_btn {{item.can_receive ? '' : 'cp_btn_off'}}" bindtap="receiveCoupon" data-index="{{index}}">{{item.btnTxt}}</view>
+      </view>
+    </view>
+  </view>
+
+</view>

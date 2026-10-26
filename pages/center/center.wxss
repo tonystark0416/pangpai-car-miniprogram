@@ -1,0 +1,120 @@
+/* pages/center/center.wxss 个人中心 */
+
+.center_page {
+  min-height: 100vh;
+  background-color: var(--pp-bg);
+  padding-bottom: 40rpx;
+}
+
+/* 头部卡片：浅蓝渐变，iOS 大标题风格 */
+.profile_card {
+  background: linear-gradient(180deg, #4DA3FF 0%, var(--pp-blue) 100%);
+  padding: 60rpx 40rpx 70rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* 头像：默认头像为渐变圆 + 「车」字，无需图片资源 */
+.avatar_wrap {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4rpx solid rgba(255, 255, 255, 0.85);
+  background-color: #FFFFFF;
+  flex-shrink: 0;
+}
+.avatar_img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar_default {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #9AD0FF 0%, #2F8BFF 100%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.avatar_default .avatar_txt {
+  color: #FFFFFF;
+  font-size: 68rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.profile_info {
+  margin-left: 28rpx;
+  flex: 1;
+  min-width: 0;
+}
+.nickname {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+.phone {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* 功能入口列表 */
+.menu_card {
+  margin: -40rpx 24rpx 0; /*上移压住头部渐变下沿 */
+  background-color: var(--pp-card);
+  border-radius: var(--pp-radius);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+.menu_item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 30rpx 28rpx;
+  border-bottom: 1rpx solid var(--pp-sep);
+}
+.menu_item:last-child {
+  border-bottom: none;
+}
+.menu_icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+.menu_icon.ic_coupon {
+  background-color: var(--pp-orange);
+}
+.menu_icon.ic_kefu {
+  background-color: var(--pp-green);
+}
+.menu_icon.ic_earn {
+  background-color: var(--pp-blue);
+}
+.menu_name {
+  flex: 1;
+  font-size: 30rpx;
+  color: var(--pp-text);
+}
+/* 右侧箭头：CSS 画一个 chevron */
+.menu_arrow {
+  width: 16rpx;
+  height: 16rpx;
+  border-top: 3rpx solid var(--pp-text-2);
+  border-right: 3rpx solid var(--pp-text-2);
+  transform: rotate(45deg);
+  opacity: 0.6;
+  flex-shrink: 0;
+}

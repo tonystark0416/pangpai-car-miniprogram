@@ -1,0 +1,29 @@
+<!-- pages/center/center.wxml 个人中心 -->
+<view class="center_page">
+
+  <!-- 头部：头像 / 昵称 / 手机号（缺省均有兜底） -->
+  <view class="profile_card">
+    <!-- 头像：有则用真实头像，无则展示默认头像（渐变圆形 + 「车」字） -->
+    <view class="avatar_wrap" bindtap="onProfileTap">
+      <image wx:if="{{avatarUrl}}" class="avatar_img" src="{{avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="avatar_default">
+        <text class="avatar_txt">车</text>
+      </view>
+    </view>
+    <view class="profile_info" bindtap="onProfileTap">
+      <view class="nickname">{{isLogin ? nickname : '未登录，点击登录'}}</view>
+      <!-- 绑定手机号：无则不展示这一行 -->
+      <view class="phone" wx:if="{{phone}}">{{phone}}</view>
+    </view>
+  </view>
+
+  <!-- 功能入口：三个入口均为待开发能力，点击提示开发中 -->
+  <view class="menu_card">
+    <view class="menu_item" wx:for="{{menus}}" wx:key="key" bindtap="onMenuTap" data-name="{{item.name}}" data-key="{{item.key}}">
+      <view class="menu_icon {{item.iconClass}}">{{item.icon}}</view>
+      <view class="menu_name">{{item.name}}</view>
+      <view class="menu_arrow"></view>
+    </view>
+  </view>
+
+</view>

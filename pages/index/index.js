@@ -8,6 +8,7 @@ const app = getApp();
 const util = require('../../utils/util.js');
 const locate = require('../../utils/locate.js');
 const { request } = require('../../utils/request.js');
+const auth = require('../../utils/auth.js');
 
 Page({
   data: {
@@ -21,7 +22,9 @@ Page({
     begin_time_txt:'选择取车时间',  //传给组件
     end_time_txt:'选择还车时间',  //传给组件
     quche_sourceTime:'',  //传给组件
-    huanche_sourceTime:'' //传给组件
+    huanche_sourceTime:'', //传给组件
+    couponList:[],  //v1.7.3 首页可领取的券批次（为空时券区整块隐藏）
+    receiving:false //领券防重复提交
   },
 
   
@@ -140,6 +143,117 @@ Page({
   },
 
 
+  //v1.7.3 首页派券：可领取的券批次（仅登录用户）
+  //无活动批次时 couponList 为空，券区整块隐藏（后台开启活动后自动出现）
+  getCouponList () {
+    const uid = auth.getUid();
+    if (!uid) {
+      this.setData({
+        couponList: []
+      })
+      return;
+    }
+    request({
+      url: '/getCouponList',
+      data: {
+        uid: uid
+      }
+    }).then((data) => {
+      if (!data || data.code !== 200) {
+        console.log('[API] 首页可领券列表返回异常：');
+        console.log(data);
+        this.setData({
+          couponList: []
+        })
+        return;
+      }
+      //can_receive 已由后端综合「库存 > 0」与「未达限领」，前端直接用它决定按钮能否点
+      const list = (data.result || []).map((item) => {
+        const canReceive = !!item.can_receive;
+        let btnTxt = '领取';
+        if (!canReceive) {
+          btnTxt = Number(item.remain_stock) > 0 ? '已领取' : '已领完';
+        }
+        return Object.assign({}, item, {
+          can_receive: canReceive,
+          btnTxt: btnTxt,
+          useTimeTxt: util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time)
+        });
+      });
+      this.setData({
+        couponList: list
+      })
+    })
+  },
+
+  //领取优惠券（v1.7.3 POST /receiveCoupon）
+  receiveCoupon (e) {
+    const uid = auth.getUid();
+    if (!uid) {
+      auth.goLogin('/pages/index/index')
+      return;
+    }
+    const index = Number(e.currentTarget.dataset.index);
+    const item = this.data.couponList[index];
+    if (!item || !item.can_receive) {
+      return;
+    }
+    if (this.data.receiving) {
+      return;
+    }
+    this.setData({
+      receiving: true
+    })
+    wx.showLoading({
+      title: '领取中',
+      mask: true
+    })
+    request({
+      url: '/receiveCoupon',
+      method: 'POST',
+      data: {
+        uid: uid,
+        couponId: item.coupon_id
+      }
+    }).then((data) => {
+      wx.hideLoading();
+      this.setData({
+        receiving: false
+      })
+      //成功 {code:200, msg:'领取成功', result:{coupon_sn,...}}
+      if (data && data.code === 200) {
+        wx.showToast({
+          title: data.msg || '领取成功',
+          icon: 'success',
+          mask: true
+        })
+        this.getCouponList() //刷新可领状态（库存/限领会变化）
+      } else {
+        wx.showToast({
+          title: (data && data.msg) || '领取失败，请稍后重试',
+          icon: 'none',
+          duration: 2500
+        })
+      }
+    }).catch(() => {
+      wx.hideLoading();
+      this.setData({
+        receiving: false
+      })
+    })
+  },
+
+  //跳转领券中心 / 我的券包（未登录先引导登录，登录后回到首页券区）
+  goCouponPage () {
+    if (!auth.isLogin()) {
+      auth.ensureLogin('/pages/index/index', '领取优惠券需要先登录，登录后即可领取。')
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/coupon/coupon'
+    })
+  },
+
   //获取推荐汽车列表，页面加载调用
   getRecommendCarList:function (pageNum) {
     request({
@@ -177,6 +291,11 @@ Page({
 
   //首页点击列表item时调用
   clickItem:function(e){
+    const carId = e.currentTarget.dataset.car_id;
+    //v1.7.0 入口强校验：未登录弹窗引导，登录后直接回到该车辆的结算页
+    if (!auth.ensureLogin('/pages/checkOut/checkOut?carId=' + carId, '完成租车业务需要先登录，登录后可继续下单。')) {
+      return;
+    }
     if (!app.globalData.pickUpAddress||!app.globalData.returnAddress) {
       wx.showToast({
         title: '请先输入取车和还车地址',
@@ -184,7 +303,6 @@ Page({
       })
       return;
     }
-    let carId = e.currentTarget.dataset.car_id;
     wx.navigateTo({
       url: "/pages/checkOut/checkOut?carId="+carId,
     })
@@ -228,7 +346,8 @@ Page({
   },
 
   onShow:function(){
-    
+    //领券后回到首页刷新可领状态与库存
+    this.getCouponList()
   },
   onShareAppMessage(){ 
     wx.showShareMenu({

@@ -24,19 +24,19 @@
   </view>
   <!-- 保险信息 -->
   <view class="insurance_info">
-    <view class="insurance_info_title">租车保障</view>
+    <view class="insurance_info_title">租车保险信息<text class="ins_required">（必选）</text></view>
     <view class="insurance_info_content">
       <view class="insurance_info_list">
         <radio-group bindchange="">
-          <radio value="" checked="true" disabled="true" />基础保障（已选）
+          <radio value="l1" checked="{{insuranceInfo.level === 'l1'}}" bindtap="checkedTap" data-level="l1" />基础保障
         </radio-group>
         <view class="ins_cost">每日¥{{insuranceInfo.insurancePrice_l1}}</view>
         <view class="ins_rule">车损1500内自付</view>
         <view class="ins_rule">三者保额 50万</view>
       </view>
       <view class="insurance_info_list">
-        <radio-group bindchange="upgradeInsurance">
-          <radio value="needUpgrade" checked="{{insuranceInfo.radio_upgrade}}" bindtap='checkedTap' />升级优享（可选）
+        <radio-group bindchange="">
+          <radio value="l2" checked="{{insuranceInfo.level === 'l2'}}" bindtap="checkedTap" data-level="l2" />升级优享
         </radio-group>
         <view class="ins_cost">每日¥{{insuranceInfo.insurancePrice_l2}}</view>
         <view class="ins_rule">车损全额免赔</view>
@@ -78,14 +78,14 @@
     <view class="sub-content">租金每天¥{{checkoutInfo.rent_day_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
     <view class="sub-title">
       <view class="sub-title-name">车辆整备费用</view>
-      <view class="sub-title-cost">¥{{checkoutInfo.clean_price}}</view>
+      <view class="sub-title-cost">¥{{checkoutInfo.clean_price || insuranceInfo.clean_price}}</view>
     </view>
-    <view class="sub-content">用于车辆清洁，车辆保养</view>
+    <view class="sub-content">用于车辆清洁，车辆保养；按订单一次性收取，不乘天数</view>
     <view class="sub-title">
-      <view class="sub-title-name">基础服务费</view>
+      <view class="sub-title-name">租车保险（{{insuranceInfo.level === 'l2' ? '升级优享' : '基础保障'}}）</view>
       <view class="sub-title-cost">¥{{checkoutInfo.server_total_price}}</view>
     </view>
-    <view class="sub-content">包含基础保障，三者保险等费用</view>
+    <view class="sub-content">保险必选，金额按车辆配置</view>
     <view class="sub-content">保险费每天¥{{checkoutInfo.server_day_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
     <!-- 上门取送费部分 -->
     <view class="sub-title" wx:if="{{siji_server==false}}">
@@ -103,6 +103,20 @@
       <view class="sub-title-cost">¥{{checkoutInfo.driver_total_price}}</view>
     </view>
     <view class="sub-content" wx:if="{{siji_server==true}}">人工费每天¥{{checkoutInfo.driver_price}},共{{checkoutInfo.rentDay}}天,不足24小时按1天计</view>
+    <!-- 优惠券（v1.7.3）：默认不使用，由用户手动选择，每单限一张 -->
+    <view class="sub-title coupon_row" bindtap="openCouponPage">
+      <view class="sub-title-name">优惠券</view>
+      <view class="coupon_value">
+        <text wx:if="{{discountPrice > 0}}" class="coupon_cut">-¥{{discountPrice}}</text>
+        <text wx:else class="coupon_hint">{{couponUsableCount > 0 ? couponUsableCount + '张可用' : '暂无可用优惠券'}}</text>
+        <text class="coupon_arrow"></text>
+      </view>
+    </view>
+    <!-- 实付：用券后与原价不同，单独一行说明 -->
+    <view class="sub-title" wx:if="{{discountPrice > 0}}">
+      <view class="sub-title-name">实付金额</view>
+      <view class="sub-title-cost pay_amount">¥{{payAmount}}</view>
+    </view>
   </view>
   <!-- 优惠明细 -->
   <!-- <view class="pms_info">
@@ -123,7 +137,8 @@
   </view>
   <view class="order-submit">
     <view class="order-all-cost">
-      <text class="cost-title">在线支付</text><text class="cost-price">¥{{checkoutInfo.total_price}}</text>
+      <!-- v1.7.3：展示与支付均用实付 pay_amount（无券时等于 total_price） -->
+      <text class="cost-title">在线支付</text><text class="cost-price">¥{{payAmount || checkoutInfo.total_price}}</text>
     </view>
     <view class="order-button" bind:tap="goPay">
       <text>去支付</text>

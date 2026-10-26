@@ -1,25 +1,47 @@
 <!-- pages/orderList/orderList.wxml订单列表页面 -->
-<view class="nologin" bind:tap="goLogin" hidden="{{islogin}}">请先进行登录</view>
-<view class="noOrder" hidden="{{noOrder}}">暂无订单</view>
-<view class="order_list_page">
-  <view class="order_list_item" wx:for="{{orderList}}" wx:key="index" wx:for-index="indexs" wx:for-item="items" bindtap='goOrderDetail' data-ordersn='{{items.order_sn}}'>
-    <view class="order_info_1">
-      <view class="order_book_time">预定于 {{items.create_time}}</view>
-      <view class="order_status {{items.statusClass}}">{{items.statusText}}</view>
-    </view>
-    <hr class="line-style"/>
-    <view class="order_info_2">
-      <view class="order_time_address">
-        <view>订单号：{{items.order_sn}}</view>
-        <view>取车时间 {{items.pickup_time_txt}}</view>
-        <view>取车地址 {{items.pickup_address}}</view>
-        <view>还车时间 {{items.return_time_txt}}</view>
-        <view>还车地址 {{items.return_address}}</view>
+<view class="nologin" wx:if="{{!islogin}}" bind:tap="goLogin">请先进行登录</view>
+
+<block wx:if="{{islogin}}">
+  <!-- 订单状态 Tab（v1.6.17：切分类时由后端 SQL 层筛选） -->
+  <!-- 标签较多或文字较宽时横向滚动，单行不换行 -->
+  <scroll-view class="order_tabs" scroll-x="{{true}}" show-scrollbar="{{false}}" enhanced="{{true}}">
+    <view class="tab_item {{currentTab === index ? 'tab_item_active' : ''}}"
+          wx:for="{{tabs}}" wx:key="key"
+          bind:tap="switchTab" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <!-- 订单列表 -->
+  <view class="order_list_page">
+    <view class="order_list_item" wx:for="{{orderList}}" wx:key="order_sn" wx:for-item="items" bindtap='goOrderDetail' data-ordersn='{{items.order_sn}}'>
+      <view class="order_info_1">
+        <view class="order_book_time">预定于 {{items.create_time}}</view>
+        <view class="order_status {{items.statusClass}}">{{items.statusText}}</view>
       </view>
-      <view class="order_car_info">
-        <view class="car_info">车型 {{items.item_name}}</view>
-        <view class="order_cost">¥{{items.total_price}}</view>
+      <hr class="line-style"/>
+      <view class="order_info_2">
+        <view class="order_time_address">
+          <view>订单号：{{items.order_sn}}</view>
+          <view>取车时间 {{items.pickup_time_txt}}</view>
+          <view>取车地址 {{items.pickup_address}}</view>
+          <view>还车时间 {{items.return_time_txt}}</view>
+          <view>还车地址 {{items.return_address}}</view>
+        </view>
+        <view class="order_car_info">
+          <view class="car_info">车型 {{items.item_name}}</view>
+          <view class="order_cost">¥{{items.total_price}}</view>
+        </view>
+      </view>
+      <!-- 未支付订单支持直接取消（catch:tap 阻止冒泡进详情） -->
+      <view class="order_item_op" wx:if="{{items.canCancel}}">
+        <view class="op_cancel" catch:tap="cancelOrder" data-ordersn='{{items.order_sn}}'>
+          <button class="btn_cancel">取消订单</button>
+        </view>
       </view>
     </view>
+
+    <!-- 列表状态：空 / 加载更多 / 到底 -->
+    <view class="list_empty" wx:if="{{empty && !loading}}">暂无订单</view>
+    <view class="list_tip" wx:if="{{loading}}">加载中…</view>
+    <view class="list_tip" wx:if="{{!empty && !loading && noMore && orderList.length > 0}}">没有更多订单了</view>
   </view>
-</view>
+</block>

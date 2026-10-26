@@ -5,6 +5,8 @@
     "pages/orderList/orderList",
     "pages/orderDetail/orderDetail",
     "pages/login/login",
+    "pages/center/center",
+    "pages/coupon/coupon",
     "pages/contract/contract"
   ],
   "window": {
@@ -30,6 +32,12 @@
         "iconPath": "/img/order_sel.png",
         "selectedIconPath": "/img/order_seled.png",
         "text": "订单"
+      },
+      {
+        "pagePath": "pages/center/center",
+        "iconPath": "/img/mine_sel.png",
+        "selectedIconPath": "/img/mine_seled.png",
+        "text": "我的"
       }
     ]
   },

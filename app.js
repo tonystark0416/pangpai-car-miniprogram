@@ -16,6 +16,16 @@ App({
 
   onLaunch() {
     let that = this;
+    //先回填本地缓存的 uid / openid，避免页面 onShow 早于登录请求完成时误判为未登录
+    const cachedUid = wx.getStorageSync('uid');
+    if (cachedUid) {
+      that.globalData.userid = cachedUid;
+    }
+    const cachedOpenid = wx.getStorageSync('openid');
+    if (cachedOpenid) {
+      that.globalData.openid = cachedOpenid;
+      that.globalData.unionid = wx.getStorageSync('unionid') || '';
+    }
     // 小程序登录：code 换 openid → tryLogin 静默登录
     wx.login({
       success: function(res) {
@@ -32,7 +42,9 @@ App({
           }
           console.log('这是openid：'+openid)
           wx.setStorageSync('openid', openid); //保存openid到本地
+          wx.setStorageSync('unionid', result.unionid || '');
           that.globalData.openid = openid;  //设置全局变量openid，用于后续页面应用
+          that.globalData.unionid = result.unionid || '';
           if (that.checkLoginReadyCallback) {
             that.checkLoginReadyCallback(openid);
           }
@@ -51,6 +63,12 @@ App({
           if (data && data.result && data.result.id) {
             that.globalData.userid = data.result.id; //设置全局变量userid，用于后续页面应用
             wx.setStorageSync('uid', data.result.id);  //保存userid到本地
+          } else if (data && (data.code === 202 || data.needRegister)) {
+            //v1.7.0：该微信尚未注册账号（不再自动建号），保持未登录态，由业务入口引导注册
+            console.log('该微信尚未注册，需引导手机号注册', data.msg);
+            if (that.onNeedRegister) {
+              that.onNeedRegister();
+            }
           } else {
             console.log('tryLogin失败', data && data.msg);
           }

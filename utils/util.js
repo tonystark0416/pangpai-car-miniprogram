@@ -46,9 +46,23 @@ function formatOrderTime(value) {
   return str
 }
 
+//优惠券有效期：后端返回 yyyy-MM-dd HH:mm:ss / yyyy-MM-dd，展示为 yyyy.MM.dd
+function formatDate(value) {
+  if (value === null || value === undefined || value === '') {
+    return ''
+  }
+  const str = String(value);
+  const matched = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (matched) {
+    return matched[1] + '.' + matched[2] + '.' + matched[3];
+  }
+  return str
+}
+
 module.exports = {
   formatTime,
   subTen,
   formatTimestamp,
-  formatOrderTime
+  formatOrderTime,
+  formatDate
 }

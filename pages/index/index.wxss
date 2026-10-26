@@ -10,6 +10,95 @@
   display: block;
 }
 
+/* 首页派券（v1.7.3）：横向滚动券卡 */
+.coupon_zone {
+  margin: 24rpx 24rpx 0;
+  background-color: var(--pp-card);
+  border-radius: var(--pp-radius-lg);
+  padding: 24rpx 0 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.coupon_zone_title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx 16rpx;
+}
+.coupon_zone_title .cz_title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--pp-text);
+}
+.coupon_zone_title .cz_more {
+  font-size: 24rpx;
+  color: var(--pp-text-2);
+}
+.coupon_scroll {
+  white-space: nowrap;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+}
+.coupon_card {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  width: 480rpx;
+  margin-right: 16rpx;
+  padding: 16rpx 20rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #FF7A45 0%, #FF3B30 100%);
+  color: #FFFFFF;
+}
+.coupon_card .cc_left {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin-right: 16rpx;
+}
+.coupon_card .cc_symbol {
+  font-size: 24rpx;
+}
+.coupon_card .cc_amount {
+  font-size: 52rpx;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 2rpx;
+}
+.coupon_card .cc_right {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.coupon_card .cc_name {
+  font-size: 26rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.coupon_card .cc_date {
+  font-size: 20rpx;
+  opacity: 0.9;
+  margin-top: 4rpx;
+}
+.coupon_card .cc_btn {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 88rpx;
+  background-color: #FFFFFF;
+  color: #FF3B30;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+.coupon_card .cc_btn_off {
+  background-color: rgba(255, 255, 255, 0.35);
+  color: #FFFFFF;
+}
+
+
 /* 时间地址选择区域：白色卡片 */
 .time_locate_zone {
   background-color: var(--pp-card);

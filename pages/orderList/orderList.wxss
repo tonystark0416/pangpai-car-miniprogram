@@ -1,17 +1,65 @@
 /* pages/orderList/orderList.wxss —— iOS 风格 */
 
-.nologin, .noOrder {
+.nologin {
   margin-top: 160rpx;
   text-align: center;
   font-size: 34rpx;
   color: var(--pp-text-2);
 }
 
+/* 订单状态 Tab：iOS 风格胶囊，单行横向滚动 */
+.order_tabs {
+  background-color: var(--pp-card);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap; /*不换行，超出可横向滚动 */
+  padding: 14rpx 24rpx;
+}
+.order_tabs .tab_item {
+  display: inline-block;
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 24rpx;
+  margin-right: 16rpx;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 26rpx;
+  color: var(--pp-text-2);
+  background-color: var(--pp-bg);
+  border-radius: 88rpx;
+}
+.order_tabs .tab_item:last-child {
+  margin-right: 0;
+}
+.order_tabs .tab_item_active {
+  background-color: var(--pp-blue);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
 .order_list_page {
-  min-height: 100vh;
+  min-height: 60vh;
   width: 100%;
   padding: 8rpx 0 40rpx;
   box-sizing: border-box;
+}
+
+/* 列表状态提示 */
+.list_empty {
+  margin-top: 160rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: var(--pp-text-2);
+}
+.list_tip {
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--pp-text-2);
+  padding: 24rpx 0;
 }
 
 .order_list_item {
@@ -21,9 +69,9 @@
   margin: 20rpx 24rpx;
   border-radius: var(--pp-radius);
   background-color: var(--pp-card);
-  height: 560rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
   overflow: hidden;
+  padding-bottom: 24rpx; /*操作区为可选节点，改为自适应高度 */
 }
 
 .order_info_1 {
@@ -91,4 +139,32 @@
   font-size: 36rpx;
   font-weight: 600;
   color: var(--pp-red);
+}
+
+/* 卡片内操作区：仅未支付订单显示「取消订单」 */
+.order_item_op {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding: 16rpx 30rpx 4rpx;
+  border-top: 1rpx solid var(--pp-sep);
+  margin-top: 16rpx;
+}
+.order_item_op .op_cancel {
+  width: 200rpx;
+  height: 72rpx;
+}
+.order_item_op .btn_cancel {
+  width: 100%;
+  height: 100%;
+  line-height: 72rpx;
+  padding: 0;
+  border-radius: 88rpx;
+  background-color: var(--pp-card);
+  color: var(--pp-text-2);
+  border: 2rpx solid var(--pp-sep);
+  font-size: 28rpx;
+}
+.order_item_op .btn_cancel::after {
+  border: none;
 }
