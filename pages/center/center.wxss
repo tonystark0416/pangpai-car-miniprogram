@@ -80,6 +80,26 @@
 .menu_item:last-child {
   border-bottom: none;
 }
+.menu_item_hover {
+  background-color: var(--pp-bg);
+}
+/* 联系客服项用原生 button（open-type="contact"），需重置默认样式 */
+button.btn_kefu_item {
+  width: 100%;
+  margin: 0;
+  padding: 30rpx 28rpx;
+  background-color: var(--pp-card);
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+  line-height: normal;
+  text-align: left;
+  box-sizing: border-box;
+}
+button.btn_kefu_item::after {
+  content: none;
+  border: none;
+}
 .menu_icon {
   width: 56rpx;
   height: 56rpx;

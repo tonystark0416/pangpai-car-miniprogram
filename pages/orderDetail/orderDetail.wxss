@@ -131,6 +131,19 @@
   font-weight: 600;
   color: var(--pp-red);
 }
+/* 优惠券行：金额醒目橙色，券名过长时省略不换行 */
+.order_cost_info .coupon_cut {
+  color: var(--pp-orange);
+  font-weight: 600;
+}
+.order_cost_info .coupon_name_txt {
+  flex: 1;
+  min-width: 0;
+  margin-right: 20rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* 操作区域 */
 .operation {
@@ -146,6 +159,14 @@
   border-radius: 88rpx;
   text-align: center;
   overflow: hidden;
+}
+
+/* 文案居中：原生 button 内部盒模型下 line-height 居中不可靠，改用 flex 双轴居中 */
+.op_pay .btn_pay, .op_cancel .btn_cancel, .op_kefu .btn_kefu, .op_refund .btn_refund {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
 }
 
 /* iOS 风格按钮 */
@@ -169,6 +190,7 @@
   border: 2rpx solid var(--pp-sep);
   font-size: 32rpx;
 }
+/* 与「联系客服」同款：白底无边框胶囊，仅用橙色文字区分（描边在 overflow 容器内渲染不稳） */
 .btn_refund {
   width: 100%;
   height: 100%;
@@ -176,7 +198,7 @@
   border-radius: 88rpx;
   background-color: var(--pp-card);
   color: var(--pp-orange);
-  border: 2rpx solid var(--pp-orange);
+  border: none;
   font-size: 32rpx;
 }
 .btn_kefu {
@@ -196,6 +218,7 @@ button {
   padding: 0;
   background-color: inherit;
   position: static;
+  box-sizing: border-box; /*带边框的描边按钮：边框计入高度，避免被容器 overflow:hidden 裁掉上下边*/
 }
 button::after {
   content: none;

@@ -45,9 +45,9 @@
       <view class="cost_price">¥{{orderInfo.door_return_price}}</view>
     </view>
     <hr class="line-style"/>
-    <!-- v1.7.3：用券订单展示优惠额与实付（pay_amount） -->
-    <view class="cost_item" wx:if="{{orderInfo.coupon_name}}">
-      <view class="cost_name">优惠券（{{orderInfo.coupon_name}}）</view>
+    <!-- v1.7.3：用券订单展示优惠额与实付（pay_amount），复用 cost3 行布局，券名过长省略 -->
+    <view class="cost3" wx:if="{{orderInfo.coupon_name}}">
+      <view class="cost_name coupon_name_txt">优惠券（{{orderInfo.coupon_name}}）</view>
       <view class="cost_price coupon_cut">-¥{{orderInfo.discount_price}}</view>
     </view>
     <view class="cost_all">
@@ -58,7 +58,7 @@
   <view class="operation">
     <view class="op_pay" wx:if="{{canPay}}"><button class="btn_pay" bind:tap="goPay">发起支付</button></view>
     <view class="op_cancel" wx:if="{{canCancel}}"><button class="btn_cancel" bind:tap="cancelOrder">取消订单</button></view>
-    <view class="op_refund" wx:if="{{canCancelRefund}}"><button class="btn_refund" bind:tap="cancelRefund">取消订单并退款</button></view>
+    <view class="op_refund" wx:if="{{canCancelRefund}}"><button class="btn_refund" bind:tap="cancelRefund">取消订单退款</button></view>
     <view class="op_kefu" wx:if="{{canKefu}}"><button class="btn_kefu" open-type="contact">联系客服</button></view>
   </view>
 </view>

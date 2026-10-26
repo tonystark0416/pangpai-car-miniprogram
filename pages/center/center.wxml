@@ -17,13 +17,21 @@
     </view>
   </view>
 
-  <!-- 功能入口：三个入口均为待开发能力，点击提示开发中 -->
+  <!-- 功能入口：联系客服与订单页一致，用微信客服会话按钮；其余点击处理 -->
   <view class="menu_card">
-    <view class="menu_item" wx:for="{{menus}}" wx:key="key" bindtap="onMenuTap" data-name="{{item.name}}" data-key="{{item.key}}">
-      <view class="menu_icon {{item.iconClass}}">{{item.icon}}</view>
-      <view class="menu_name">{{item.name}}</view>
-      <view class="menu_arrow"></view>
-    </view>
+    <block wx:for="{{menus}}" wx:key="key">
+      <!-- 联系客服：open-type="contact" 直接唤起微信客服会话，无需登录 -->
+      <button wx:if="{{item.key === 'kefu'}}" class="menu_item btn_kefu_item" open-type="contact" hover-class="menu_item_hover">
+        <view class="menu_icon {{item.iconClass}}">{{item.icon}}</view>
+        <view class="menu_name">{{item.name}}</view>
+        <view class="menu_arrow"></view>
+      </button>
+      <view wx:else class="menu_item" hover-class="menu_item_hover" bindtap="onMenuTap" data-name="{{item.name}}" data-key="{{item.key}}">
+        <view class="menu_icon {{item.iconClass}}">{{item.icon}}</view>
+        <view class="menu_name">{{item.name}}</view>
+        <view class="menu_arrow"></view>
+      </view>
+    </block>
   </view>
 
 </view>

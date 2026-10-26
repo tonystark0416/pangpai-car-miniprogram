@@ -148,7 +148,7 @@ Page({
       return;
     }
     wx.showModal({
-      title: '取消订单并退款',
+      title: '取消订单退款',
       content: '确认取消该订单并申请全额退款吗？退款成功后订单不可恢复。',
       success: (modalRes) => {
         if (!modalRes.confirm) {
