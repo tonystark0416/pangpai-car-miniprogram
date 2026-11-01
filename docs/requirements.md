@@ -6,7 +6,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 文档创建时间 | 2026-09-10 |
-| 当前代码基线 | v1.11（2026-10-27：个人中心接入联系客服；此前 v1.10 接入优惠券（首页派券/结算页用券/券页）、v1.9 新增个人中心 tab 页、v1.8 登录注册改造 + 登录态守卫、v1.7 结算页对齐 v1.6.18 保险档位制、v1.6 订单列表接入 v1.6.17 筛选与分页、v1.5 对接 `/cancelOrder`、v1.4 对齐 v1.6.12 计价口径、v1.3 对接 `/cancelRefund`、v1.2 对齐 v1.6.8 接口、v1.1 iOS 风格改版、v1.0 员工端下线 + 统一请求层） |
+| 当前代码基线 | v1.14（2026-11-01：接口环境切回线上；此前 v1.13 临时切本地联调、 v1.12 新增车辆详情页（轮播/标签/配置/试算/券后价）、 v1.11 个人中心接入联系客服、v1.10 接入优惠券（首页派券/结算页用券/券页）、v1.9 新增个人中心 tab 页、v1.8 登录注册改造 + 登录态守卫、v1.7 结算页对齐 v1.6.18 保险档位制、v1.6 订单列表接入 v1.6.17 筛选与分页、v1.5 对接 `/cancelOrder`、v1.4 对齐 v1.6.12 计价口径、v1.3 对接 `/cancelRefund`、v1.2 对齐 v1.6.8 接口、v1.1 iOS 风格改版、v1.0 员工端下线 + 统一请求层） |
 | 项目类型 | 微信小程序（原生，无框架/npm 依赖）+ 多端壳配置（iOS/Android mini-app） |
 | 后端 | PHP 服务（域名 https://pangpai-car.com，部分接口走 car/route.php、car/staff/api.php 网关式入口） |
 | 归属 | 庞派出行 · 租车业务 |
@@ -115,12 +115,12 @@ App.onLaunch
 
 | 入口 | 位置 | 未登录行为 |
 | --- | --- | --- |
-| 点击汽车卡片进结算页 | `index.js clickItem` | 弹窗 → 登录 → 登录后直达该车辆的 `/checkOut?carId=` |
+| 车辆详情页点「去下单」进结算页 | `carDetail.js goOrder` | 弹窗 → 登录 → 登录后直达该车辆的 `/checkOut?carId=`（v1.12：校验点由首页卡片下移，详情页本身可匿名浏览） |
 | 点击订单 tab 进订单列表 | `orderList.js onShow` | 弹窗 → 登录 → 登录后回到订单列表 |
 
 ### 3.2 用户下单支付链路
 ```
-首页(选时间/地点/车型) → checkOut 结算页(?carId=)
+首页(选时间/地点/车型) → 车辆详情页(?carId=，浏览+试算) → checkOut 结算页(?carId=)
   → 拉取保险价/司机价/驾驶员信息 → checkout 实时计价
   → 勾选升级保障 / 司机服务 → 重新 checkout
   → 上传身份证 → OCR 回填姓名/号码/出生日期 → updateUserDriverInfo 落库
@@ -211,7 +211,8 @@ staff（查询列表）→ staffOrder（详情）
 | `/tryLogin` (GET) | openid 登录（**v1.7.0 起只查不注册**：200 已注册返回 uid；**202 `needRegister:true` = 该微信尚无账号**，需走手机号注册） | app.js |
 | `/loginByPhone` (GET) | **手机号注册/登录合一**（v1.7.0 新增，入参 `code`+`openid`+`unionid`；已注册则登录、未注册则建号并绑定 openid） | login.js |
 | `/bindPhone` (GET) | 老用户补填手机号（v1.7.0 新增，`uid`+`code`；**前端暂未接入**，老用户换设备找回账号时使用） | - |
-| `/getCarList` | 分页车辆列表（`pageNum` 从 1 开始；v1.6.7 起后端按 `sort` 排序且只返回上架车，前端不二次排序） | index.js |
+| `/getCarList` | 分页车辆列表（`pageNum` 从 1 开始；v1.6.7 起后端按 `sort` 排序且只返回上架车，前端不二次排序；**v1.7.6 起车辆对象新增 `images`/`tags`/`config`**） | index.js |
+| `/getCarInfo` | **车辆详情 + 费用试算**（v1.7.5 新增：`carId` 必填，`uid`/`pickUpTime`/`returnTime`/`insuranceLevel`/`driver_price` 选填；返回车辆对象 + `rentDay`/`total_price`/`pay_amount`/`best_coupon`/`coupon_count`） | carDetail.js |
 | `/getDriverPrice` | 司机服务日价 | checkOut.js |
 | `/getInsurancePrice` | 两档保险日价（v1.6.18 起按车辆配置，需传 `carId`） | checkOut.js |
 | `/getCouponList` | **可领取券批次**（v1.7.3 新增，入参 `uid`；`can_receive` 已综合库存与限领） | index.js / coupon.js |
@@ -344,6 +345,8 @@ staff（查询列表）→ staffOrder（详情）
 | 日期 | 版本 | 类型 | 模块 | 说明 | 关联条目 |
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-26 | v1.10 | 新增 | 优惠券（v1.7.3） | 依据后端接口文档 v1.7.3 接入优惠券：1) **首页派券**——首页顶部新增横向滚动券区（`GET /getCouponList`），按 `can_receive` 控制按钮可点，点「领取」调 `POST /receiveCoupon` 并刷新库存，右上角「领券中心 ›」进券页；2) **新增 `pages/coupon` 优惠券页**——「我的券包 / 领券中心」双 Tab，券包按 `usable` 置灰并展示 `unusable_reason`，领券中心可一键领取；结算页打开时为**选券模式**（`?select=1&carId=&amount=`），点选可用券通过 `eventChannel` 回传券码；3) **结算页用券**——费用明细新增「优惠券」行显示可用张数/已抵扣额，选中后带 `couponSn` 重新 `/checkout`，展示 `discount_price` 与实付 `pay_amount`；**默认不使用券**（服务端不会自动选券），带券结算被拒时提示 `msg` 并自动去掉券重新计价刷新券包；4) **支付金额改用 `pay_amount`**（结算页与订单详情二次支付均改，服务端会校验 `totalFee === pay_amount×100`），订单详情用券时展示优惠券行与实付金额；5) **下单前强校验联系人手机号**（`^1[3-9]\d{9}$`，未填/格式错直接拦截，不再等后端 `400`）；6) 个人中心「我的优惠券」入口跳转券页（未登录先引导登录） | - |
+| 2026-11-01 | v1.14 | 修改 | 全局接口环境 | 本地联调结束，接口环境切回**线上**：`utils/config.js` 的 `BASE_URL` 由 `http://localhost:3002` 改回 `https://pangpai-car.com`（全小程序唯一域名入口，仅此一行）。业务逻辑零改动 | - |
+| 2026-11-01 | v1.12 | 新增 | 车辆详情页 | 依据后端接口文档 v1.7.5/1.7.6 新增 `pages/carDetail`（首页列表 → 详情 → 结算页）：1) 接入 `GET /getCarInfo?carId=`，`uid` **选填**——已登录才传（拿券后价），未登录匿名浏览只显示参考价；2) **轮播图**用 v1.7.6 新增的 `images`（空时回退主图 `image_url`），支持点击预览；3) 车名下方渲染 `tags` 标签行，`des` 作卖点；4) **车辆配置**：`config` 对象按 `Object.keys` 顺序渲染为两列键值表；5) **费用试算**：租金/保险/司机/整备费 + 合计全部取服务端返回值，**前端不做任何价格计算**，展示口径一律 `pay_amount`；6) **优惠券试算**：展示 `best_coupon` 与券后价，并明确「不替用户锁券，需在结算页手动选择」（遵守 v1.7.3「默认不选券」规则）；7) 底部固定栏显示券后价 + 「去下单」，点击时**强校验登录态与取还地址**（原首页卡片的校验下移到此处）；8) **用户评价本期不提供**（后端库内暂无评价表），页面做占位区块 | - |
 | 2026-10-27 | v1.11 | 新增 | 个人中心联系客服 | 个人中心「联系客服」入口改为**与订单页一致的微信客服会话**：1) 菜单列表按 key 分流，`kefu` 项渲染为原生 `<button open-type="contact">`（与 `orderDetail` 的 `btn_kefu` 同一套能力），点击直接唤起客服会话，**无需登录**；2) 其余项保持原 `view` 外观，避免 button 与 view 混排导致样式错位；3) 重置原生 button 样式（`button.btn_kefu_item` 去掉默认边框/圆角/内边距，并清 `::after` 边框），保证与相邻菜单项视觉一致；4) 菜单项统一加 `hover-class` 点击态 | - |
 | 2026-10-25 | v1.9 | 新增 | 个人中心（tabBar 第三项） | 新增 `pages/center` 个人中心并加入 tabBar：1) 头部展示头像/昵称/手机号，缺省兜底——**默认头像为纯 CSS 绘制的蓝色渐变圆 + 「车」字**（无图片资源依赖），昵称默认「尊贵的车主」，**手机号缺失或未登录时不展示该行**；2) 登录页成功回调中持久化 `phone`/`nickname`/`avatarUrl` 到 storage，供个人中心读取；3) 下方「我的优惠券 / 联系客服 / 闲置车赚钱」三个入口，点击统一提示开发中；4) 未登录时点击头像区走 `auth.goLogin('/pages/center/center')`，登录后回到个人中心；5) tabBar 图标 `img/mine_sel.png`（灰 #8E8E93）/ `img/mine_seled.png`（蓝 #007AFF）：人形线性圆头图标，PIL 程序化绘制（生成脚本 `scripts/gen_mine_icon.py`），200×200、&lt;10KB，与现有首页/订单图标同风格 | - |
 | 2026-10-25 | v1.8 | 重构 | 登录注册与登录态守卫 | 依据后端接口文档 v1.7.0 重做登录链路：1) **`/tryLogin` 不再自动建号**，未注册返回 `202 needRegister:true`，app.js 保持未登录态（老用户已绑定的不受影响）；2) 登录页改用新接口 **`GET /loginByPhone`**（`code`+`openid`+`unionid`）替代旧网关 `car/route.php?service=userRegister`，**旧网关至此全部下线**；失败按 `res.msg` 提示（40029 需重新授权 / 已绑定其他账号联系客服 / 500 重试），并加防重复提交；3) 新增 **`utils/auth.js` 登录态守卫**：`isLogin`/`ensureLogin`/`goLogin`/`backAfterLogin`/`ensureOpenid`，以 uid 为唯一标识且 globalData 未就绪时回退 storage 并回填；4) **两个入口强校验登录态**——点击汽车卡片（未登录弹窗 → 登录后直达 `/checkOut?carId=`）、点击订单 tab（未登录弹窗 → 登录后回到订单列表）；5) 登录页支持 `redirect` 参数，登录成功后**回到原页面继续原操作**（tabBar 页 switchTab、普通页 redirectTo）；6) app.js 启动时先回填缓存 uid/openid，规避启动时序竞态 | B-01（部分）、B-09（部分） |

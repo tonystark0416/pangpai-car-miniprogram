@@ -1,0 +1,142 @@
+<!-- pages/carDetail/carDetail.wxml 车辆详情（v1.7.5 / 1.7.6） -->
+<view class="car_detail_page">
+
+  <!-- 加载中 / 失败 -->
+  <view class="cd_loading" wx:if="{{loading}}">加载中…</view>
+  <view class="cd_error" wx:elif="{{errorMsg}}">
+    <view class="cd_error_txt">{{errorMsg}}</view>
+    <view class="cd_retry" bindtap="retry">重新加载</view>
+  </view>
+
+  <block wx:else>
+
+    <!-- 轮播图：images（v1.7.6），为空时至少 1 张主图兜底 -->
+    <swiper class="cd_swiper" indicator-dots="{{images.length > 1}}" indicator-color="rgba(255,255,255,0.5)"
+            indicator-active-color="#FFFFFF" circular="{{true}}" autoplay="{{images.length > 1}}">
+      <swiper-item wx:for="{{images}}" wx:key="*this">
+        <image class="cd_swiper_img" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}"></image>
+      </swiper-item>
+    </swiper>
+
+    <!-- 车名 / 卖点 / 标签 / 价格 -->
+    <view class="cd_card cd_header">
+      <view class="cd_name">{{car.car_name}}</view>
+      <view class="cd_des" wx:if="{{car.des}}">{{car.des}}</view>
+      <view class="cd_tags" wx:if="{{tags.length > 0}}">
+        <text class="cd_tag" wx:for="{{tags}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="cd_price_row">
+        <view class="cd_price">
+          <text class="cd_symbol">¥</text><text class="cd_price_num">{{car.promotion_day_price || car.day_price}}</text><text class="cd_unit">/天</text>
+        </view>
+        <view class="cd_price_old" wx:if="{{car.promotion_day_price && car.promotion_day_price != car.day_price}}">¥{{car.day_price}}/天</view>
+      </view>
+    </view>
+
+    <!-- 费用试算：金额全部来自服务端，前端不计算 -->
+    <view class="cd_card">
+      <view class="cd_card_title">费用试算</view>
+      <view class="cd_time_row">
+        <text class="cd_time_label">取车</text>
+        <text class="cd_time_value">{{pickUpTimeTxt || '待选择'}}</text>
+      </view>
+      <view class="cd_time_row">
+        <text class="cd_time_label">还车</text>
+        <text class="cd_time_value">{{returnTimeTxt || '待选择'}}</text>
+      </view>
+      <view class="cd_day_row">
+        <text class="cd_day_num">共 {{rentDay}} 天</text>
+        <text class="cd_day_tip">{{hasTime ? '（不足24小时按1天计）' : '（未选时间，按1天试算）'}}</text>
+      </view>
+      <view class="cd_fee_row" wx:for="{{feeRows}}" wx:key="name">
+        <view class="cd_fee_left">
+          <text class="cd_fee_name {{item.cut ? 'cd_fee_cut' : ''}}">{{item.name}}</text>
+          <text class="cd_fee_desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+        </view>
+        <text class="cd_fee_value {{item.cut ? 'cd_fee_cut' : ''}}">{{item.value}}</text>
+      </view>
+      <view class="cd_fee_total">
+        <text class="cd_total_label">合计（原价）</text>
+        <text class="cd_total_price">¥{{totalPrice}}</text>
+      </view>
+    </view>
+
+    <!-- 优惠券试算：仅展示「可用券可省多少」，不替用户锁券 -->
+    <view class="cd_card" wx:if="{{isLogin}}">
+      <view class="cd_card_title">优惠券</view>
+      <block wx:if="{{bestCoupon}}">
+        <view class="cd_coupon">
+          <view class="cd_coupon_left">
+            <text class="cd_coupon_symbol">¥</text><text class="cd_coupon_amount">{{bestCoupon.amount}}</text>
+          </view>
+          <view class="cd_coupon_right">
+            <view class="cd_coupon_name">{{bestCoupon.name}}</view>
+            <view class="cd_coupon_tip" wx:if="{{bestCoupon.use_end_time}}">有效期至 {{bestCoupon.use_end_time}}</view>
+          </view>
+        </view>
+        <view class="cd_coupon_result">使用该券后预计 <text class="cd_coupon_pay">¥{{payAmount}}</text>，立减 ¥{{discountPrice}}</view>
+        <view class="cd_coupon_note">券后价仅为试算，需在结算页手动选择使用（每单限一张）</view>
+      </block>
+      <block wx:elif="{{couponCount > 0}}">
+        <view class="cd_coupon_empty">你有 {{couponCount}} 张券可用于本车，到结算页可选择使用</view>
+      </block>
+      <block wx:else>
+        <view class="cd_coupon_empty">暂无可用于该车的优惠券</view>
+      </block>
+    </view>
+
+    <!-- 未登录：匿名浏览，提示登录看券后价 -->
+    <view class="cd_card cd_login_tip" wx:else bindtap="goLogin">
+      <view class="cd_login_txt">登录后查看你的券后价</view>
+      <view class="cd_login_go">登录 ›</view>
+    </view>
+
+    <!-- 租车保险：必买，l1/l2 二选一（v1.6.18 档位制），切换后重新试算 -->
+    <view class="cd_card">
+      <view class="cd_card_title">租车保险（必选）</view>
+      <view class="cd_ins_item {{insuranceLevel === 'l1' ? 'cd_ins_on' : ''}}" bindtap="switchInsurance" data-level="l1">
+        <view class="cd_ins_head">
+          <text class="cd_ins_name">基础保障</text>
+          <text class="cd_ins_price" wx:if="{{insurancePriceL1 !== ''}}">¥{{insurancePriceL1}}/天</text>
+        </view>
+        <view class="cd_ins_rule">车损1500内自付 · 三者保额50万</view>
+      </view>
+      <view class="cd_ins_item {{insuranceLevel === 'l2' ? 'cd_ins_on' : ''}}" bindtap="switchInsurance" data-level="l2">
+        <view class="cd_ins_head">
+          <text class="cd_ins_name">升级优享</text>
+          <text class="cd_ins_price" wx:if="{{insurancePriceL2 !== ''}}">¥{{insurancePriceL2}}/天</text>
+        </view>
+        <view class="cd_ins_rule">车损全额免赔 · 三者保额100万</view>
+      </view>
+    </view>
+
+    <!-- 车辆配置：config 键值对（v1.7.6） -->
+    <view class="cd_card" wx:if="{{configList.length > 0}}">
+      <view class="cd_card_title">车辆配置</view>
+      <view class="cd_config">
+        <view class="cd_config_item" wx:for="{{configList}}" wx:key="key">
+          <text class="cd_config_key">{{item.key}}</text>
+          <text class="cd_config_value">{{item.value}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 用户评价：后端本期不提供评价数据（库内暂无评价表），先占位 -->
+    <view class="cd_card">
+      <view class="cd_card_title">用户评价</view>
+      <view class="cd_review_empty">评价功能开发中，敬请期待</view>
+    </view>
+
+    <view class="cd_placeholder"></view>
+  </block>
+
+  <!-- 底部：实付 + 去下单 -->
+  <view class="cd_footer" wx:if="{{!loading && !errorMsg}}">
+    <view class="cd_footer_price">
+      <view class="cd_footer_label">{{discountPrice > 0 ? '券后价' : '预估总价'}}</view>
+      <view class="cd_footer_amount"><text class="cd_footer_symbol">¥</text>{{payAmount}}</view>
+    </view>
+    <view class="cd_footer_btn" bindtap="goOrder">去下单</view>
+  </view>
+
+</view>

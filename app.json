@@ -7,6 +7,7 @@
     "pages/login/login",
     "pages/center/center",
     "pages/coupon/coupon",
+    "pages/carDetail/carDetail",
     "pages/contract/contract"
   ],
   "window": {

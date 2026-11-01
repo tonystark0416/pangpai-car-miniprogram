@@ -292,27 +292,10 @@ Page({
   //首页点击列表item时调用
   clickItem:function(e){
     const carId = e.currentTarget.dataset.car_id;
-    //v1.7.0 入口强校验：未登录弹窗引导，登录后直接回到该车辆的结算页
-    if (!auth.ensureLogin('/pages/checkOut/checkOut?carId=' + carId, '完成租车业务需要先登录，登录后可继续下单。')) {
-      return;
-    }
-    if (!app.globalData.pickUpAddress||!app.globalData.returnAddress) {
-      wx.showToast({
-        title: '请先输入取车和还车地址',
-        icon:'none'
-      })
-      return;
-    }
+    //v1.7.5：列表 → 车辆详情（可匿名浏览，接口 uid 选填）→ 详情页「去下单」再强校验登录与地址
     wx.navigateTo({
-      url: "/pages/checkOut/checkOut?carId="+carId,
+      url: "/pages/carDetail/carDetail?carId="+carId,
     })
-    // if (app.globalData.userid == null) {
-    //   wx.navigateTo({
-    //     url: "/pages/login/login"
-    //   })
-    // }else{
-
-    // }
   },
 
 
