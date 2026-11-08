@@ -5,13 +5,15 @@
   </view>
   <view class = "loginForm">
     <view class="b_login">
-      <button class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">手机号一键登录</button>
+      <!-- 两段式：未勾选协议时是普通按钮（只提示，不发起授权）；勾选后才渲染 getPhoneNumber 按钮 -->
+      <button wx:if="{{agreement}}" class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">手机号一键登录</button>
+      <button wx:else class="login-btn" bindtap="onLoginTap">手机号一键登录</button>
     </view>
     <view class="agreement">
       <checkbox-group bindchange="agreementChange">
         <checkbox value="agree" checked="{{agreement}}" />
         <text class="agreement_text">我已阅读并同意</text>
-        <text class="agreement_link">《庞派租车会员注册协议》</text>
+        <text class="agreement_link" bindtap="goAgreement">《庞派租车会员注册协议》</text>
       </checkbox-group>
     </view>
   </view>

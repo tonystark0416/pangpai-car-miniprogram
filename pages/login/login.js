@@ -2,6 +2,7 @@
 
 const { request } = require('../../utils/request.js');
 const auth = require('../../utils/auth.js');
+const config = require('../../utils/config.js');
 
 // 获取应用实例
 const app = getApp()
@@ -12,7 +13,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-    agreement:true,
+    agreement:false, //协议默认不勾选，由用户手动勾选后才可登录
     redirect:'', //登录成功后要回到的页面路径（由入口传入）
     logining:false //防重复提交
   },
@@ -24,12 +25,29 @@ Page({
     })
   },
 
+  //查看《会员注册协议》：复用合同 web-view 页，仅放行本站域名
+  goAgreement() {
+    const url = config.BASE_URL + '/agreement/membership.html';
+    wx.navigateTo({
+      url: '/pages/contract/contract?url=' + encodeURIComponent(url)
+    })
+  },
+
+  //未勾选协议时点「手机号一键登录」：仅弹窗提示，不触发微信手机号授权（审核合规：未经用户同意不发起登录）
+  onLoginTap() {
+    wx.showModal({
+      title: '提示',
+      content: '请先阅读并勾选《庞派租车会员注册协议》',
+      showCancel: false,
+      confirmText: '我知道了'
+    })
+  },
+
   //手机号一键登录/注册（v1.7.0 GET /loginByPhone：该手机号已注册则登录，未注册则建号并绑定 openid）
+  //能走到这里说明协议已勾选（未勾选时渲染的是普通按钮 onLoginTap），双保险再校验一次
   getPhoneNumber (e) {
     if (!this.data.agreement) {
-      wx.showToast({
-        title: '请同意协议',
-      })
+      this.onLoginTap();
       return;
     }
     if (this.data.logining) {

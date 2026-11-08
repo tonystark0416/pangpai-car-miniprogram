@@ -174,10 +174,15 @@ Page({
         if (!canReceive) {
           btnTxt = Number(item.remain_stock) > 0 ? '已领取' : '已领完';
         }
+        //v1.7.12：valid_type=2（领取后 N 小时可用）不展示批次时间，文案拼「领取后 N 小时内可用」
+        const validType = Number(item.valid_type) || 1;
+        const useTimeTxt = validType === 2
+          ? '领取后 ' + (item.valid_hours || 0) + ' 小时内可用'
+          : util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time);
         return Object.assign({}, item, {
           can_receive: canReceive,
           btnTxt: btnTxt,
-          useTimeTxt: util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time)
+          useTimeTxt: useTimeTxt
         });
       });
       this.setData({

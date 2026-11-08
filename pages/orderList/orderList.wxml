@@ -28,7 +28,7 @@
         </view>
         <view class="order_car_info">
           <view class="car_info">车型 {{items.item_name}}</view>
-          <view class="order_cost">¥{{items.total_price}}</view>
+          <view class="order_cost">¥{{items.payAmount}}</view>
         </view>
       </view>
       <!-- 未支付订单支持直接取消（catch:tap 阻止冒泡进详情） -->

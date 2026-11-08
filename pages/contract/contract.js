@@ -12,9 +12,16 @@ Page({
 
   /**
    * 生命周期函数--监听页面加载
+   * 支持外部传入页面地址：?url=（需 encodeURIComponent）
+   * 仅允许本站域名（web-view 需配置业务域名，且防任意跳转），否则回落默认合同页
    */
   onLoad(options) {
-
+    const url = options.url ? decodeURIComponent(options.url) : '';
+    if (url && url.indexOf(config.BASE_URL) === 0) {
+      this.setData({
+        contractUrl: url
+      })
+    }
   },
 
   /**

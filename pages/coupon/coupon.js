@@ -77,6 +77,9 @@ Page({
       const list = (data.result || []).map((item) => {
         return Object.assign({}, item, {
           usable: !!item.usable,
+          //v1.7.7：展示用派生状态 state_text（含「已过期」）；老后端无该字段时回退 status_text
+          stateText: item.state_text || item.status_text || '',
+          expired: item.state === 'expired',
           useTimeTxt: util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time)
         });
       });
@@ -114,10 +117,15 @@ Page({
       }
       const list = (data.result || []).map((item) => {
         const canReceive = !!item.can_receive;
+        //v1.7.12：valid_type=2（领取后 N 小时可用）时批次时间只是兜底值，文案拼「领取后 N 小时内可用」
+        const validType = Number(item.valid_type) || 1;
+        const useTimeTxt = validType === 2
+          ? '领取后 ' + (item.valid_hours || 0) + ' 小时内可用'
+          : util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time);
         return Object.assign({}, item, {
           can_receive: canReceive,
           btnTxt: canReceive ? '立即领取' : (Number(item.remain_stock) > 0 ? '已领取' : '已领完'),
-          useTimeTxt: util.formatDate(item.use_start_time) + ' - ' + util.formatDate(item.use_end_time)
+          useTimeTxt: useTimeTxt
         });
       });
       this.setData({

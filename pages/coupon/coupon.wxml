@@ -24,7 +24,8 @@
         <view class="cp_reason" wx:if="{{!item.usable && item.unusable_reason}}">{{item.unusable_reason}}</view>
       </view>
       <view class="cp_right">
-        <view class="cp_status">{{item.status_text}}</view>
+        <!-- v1.7.7：展示派生状态 state_text（含已过期），过期券保留置灰不隐藏 -->
+        <view class="cp_status">{{item.stateText}}</view>
         <view class="cp_use" wx:if="{{selectMode && item.usable}}">使用</view>
       </view>
     </view>

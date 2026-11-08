@@ -74,7 +74,11 @@ Page({
             statusClass: status.class,
             canCancel: status.canCancel,
             pickup_time_txt: util.formatOrderTime(item.pickup_time),
-            return_time_txt: util.formatOrderTime(item.return_time)
+            return_time_txt: util.formatOrderTime(item.return_time),
+            //v1.7.3 金额口径：展示实付 pay_amount；老订单无该字段时回退 total_price
+            payAmount: (item.pay_amount !== undefined && item.pay_amount !== null && item.pay_amount !== '')
+              ? item.pay_amount
+              : item.total_price
           })
         })
         const merged = append ? this.data.orderList.concat(list) : list;
